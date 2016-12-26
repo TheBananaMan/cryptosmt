@@ -33,7 +33,8 @@ def startsearch(tool_parameters):
                     "chaskeyhalf" : chaskeymachalf.ChasKeyMacHalf(),
                     "ascon" : ascon.AsconCipher(),
                     "salsa" : salsa.SalsaCipher(),
-                    "chacha" : chacha.ChaChaCipher()}
+                    "chacha" : chacha.ChaChaCipher(),
+                    "skinny" : skinny.SkinnyCipher()}
 
     cipher = None
 

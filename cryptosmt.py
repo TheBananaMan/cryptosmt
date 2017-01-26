@@ -15,6 +15,7 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 import yaml
 import os
+import sys
 
 
 def startsearch(tool_parameters):
@@ -45,6 +46,7 @@ def startsearch(tool_parameters):
         cipher = cipher_suite[tool_parameters["cipher"]]
     else:
         print("Cipher not supported!")
+        sys.stdout.flush()
         return
 
     # Handle program flow
@@ -71,15 +73,18 @@ def checkenviroment():
 
     if not os.path.exists(PATH_STP):
         print("ERROR: Could not find STP binary, please check config.py")
+        sys.stdout.flush()
         exit()
 
     if not os.path.exists(PATH_CRYPTOMINISAT):
         print("WARNING: Could not find CRYPTOMINISAT binary, please check "
               "config.py.")
+        sys.stdout.flush()
 
     if not os.path.exists(PATH_BOOLECTOR):
         print("WARNING: Could not find BOOLECTOR binary, \"--boolector\" "
               "option not available.")
+        sys.stdout.flush()
 
     return
 

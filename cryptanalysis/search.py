@@ -13,6 +13,7 @@ import random
 import math
 import os
 import time
+import sys
 
 from fractions import gcd
 
@@ -45,6 +46,7 @@ def computeProbabilityOfDifferentials(cipher, parameters):
 
         # Find the number of solutions with the SAT solver
         print("Finding all trails of weight {}".format(parameters["sweight"]))
+        sys.stdout.flush()
 
         # Watch the process and count solutions
         solutions = 0
@@ -55,9 +57,11 @@ def computeProbabilityOfDifferentials(cipher, parameters):
                 solutions += 1
             if solutions % 100 == 0:
                 print("\tSolutions: {}\r".format(solutions // 2), end="")
+                sys.stdout.flush()
 
         log_file.close()
         print("\tSolutions: {}".format(solutions // 2))
+        sys.stdout.flush()
 
         assert solutions == countSolutionsLogfile(sat_logfile)
 
@@ -72,6 +76,7 @@ def computeProbabilityOfDifferentials(cipher, parameters):
             print("\tTrails found: {}".format(characteristics_found))
             print("\tCurrent Probability: " + str(math.log(diff_prob, 2)))
             print("\tTime: {}s".format(round(time.time() - start_time, 2)))
+            sys.stdout.flush()
         parameters["sweight"] += 1
 
     return diff_prob
@@ -138,6 +143,7 @@ def findMinWeightCharacteristic(cipher, parameters):
                                                  parameters["rounds"],
                                                  parameters["wordsize"])))
     print("---")
+    sys.stdout.flush()
 
     start_time = time.time()
 
@@ -146,6 +152,7 @@ def findMinWeightCharacteristic(cipher, parameters):
 
         print("Weight: {} Time: {}s".format(parameters["sweight"],
                                             round(time.time() - start_time, 2)))
+        sys.stdout.flush()
 
         # Construct problem instance for given parameters
         stp_file = "tmp/{}{}.stp".format(cipher.name,
@@ -168,6 +175,7 @@ def findMinWeightCharacteristic(cipher, parameters):
                                                  parameters["wordsize"],
                                                  parameters["sweight"],
                                                  current_time)))
+            sys.stdout.flush()
             characteristic = ""
             if parameters["boolector"]:
                 characteristic = parsesolveroutput.getCharBoolectorOutput(
@@ -177,6 +185,7 @@ def findMinWeightCharacteristic(cipher, parameters):
                     result, cipher, parameters["rounds"])
 
             characteristic.printText()
+            sys.stdout.flush()
 
             if parameters["dot"]:
                 with open(parameters["dot"], "w") as dot_file:
@@ -184,11 +193,13 @@ def findMinWeightCharacteristic(cipher, parameters):
                     dot_file.write(characteristic.getDOTString())
                     dot_file.write("}")
                 print("Wrote .dot to {}".format(parameters["dot"]))
+                sys.stdout.flush()
                 
             if parameters["latex"]:
                 with open(parameters["latex"], "w") as tex_file:
                     tex_file.write(characteristic.getTexString())
-                print("Wrote .tex to {}".format(parameters["latex"]))                
+                print("Wrote .tex to {}".format(parameters["latex"])) 
+                sys.stdout.flush()               
             break
         parameters["sweight"] += 1
     return parameters["sweight"]
@@ -223,6 +234,7 @@ def findAllCharacteristics(cipher, parameters):
                                       parameters["rounds"],
                                       parameters["wordsize"],
                                       parameters["sweight"])))
+            sys.stdout.flush()
 
             characteristic = ""
             if parameters["boolector"]:
@@ -233,10 +245,12 @@ def findAllCharacteristics(cipher, parameters):
                     result, cipher, parameters["rounds"])
 
             characteristic.printText()
+            sys.stdout.flush()
             parameters["blockedCharacteristics"].append(characteristic)
         else:
             print("Found {} characteristics with weight {}".format(
                 total_num_characteristics, parameters["sweight"]))
+            sys.stdout.flush()
             parameters["sweight"] += 1
             total_num_characteristics = 0
             continue
@@ -253,6 +267,7 @@ def findAllCharacteristics(cipher, parameters):
             dot_file.write(dot_graph)
             dot_file.write("}")
         print("Wrote .dot to {}".format(parameters["dot"]))
+        sys.stdout.flush()
         
     return
 
@@ -263,8 +278,10 @@ def searchCharacteristics(cipher, parameters):
     """
     while True:
         print("Number of rounds: {}".format(parameters["rounds"]))
+        sys.stdout.flush()
         parameters["sweight"] = findMinWeightCharacteristic(cipher, parameters)
         print("Rounds:")
+        sys.stdout.flush()
         parameters["rounds"] = parameters["rounds"] + 1
     return
 
@@ -274,6 +291,7 @@ def reachedTimelimit(start_time, timelimit):
     """
     if round(time.time() - start_time) >= timelimit and timelimit != -1:
         print("Reached the time limit of {} seconds".format(timelimit))
+        sys.stdout.flush()
         return True
     return False
 

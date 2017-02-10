@@ -57,7 +57,7 @@ class MidoriCipher(AbstractCipher):
             stpcommands.setupWeightComputation(stp_file, weight, w, wordsize)
 
             for i in range(rounds):
-                self.setupMidoriRound(stp_file, sb[i], sc[i], mc[i], sb[i+1], 
+                self.setupMidoriRound(stp_file, sb[i], sc[i], mc[i], sb[i+1],
                                       w[i], wordsize)
 
             # No all zero characteristic
@@ -92,22 +92,12 @@ class MidoriCipher(AbstractCipher):
         # 2 6 a e       5 b c 2
         # 3 7 b f       f 1 6 8
 
-        command += "ASSERT({}[0:0] = {}[0:0]);\n".format(sc, mc)
-        command += "ASSERT({}[1:1] = {}[10:10]);\n".format(sc, mc)
-        command += "ASSERT({}[2:2] = {}[5:5]);\n".format(sc, mc)
-        command += "ASSERT({}[3:3] = {}[15:15]);\n".format(sc, mc)
-        command += "ASSERT({}[4:4] = {}[14:14]);\n".format(sc, mc)
-        command += "ASSERT({}[5:5] = {}[4:4]);\n".format(sc, mc)
-        command += "ASSERT({}[6:6] = {}[11:11]);\n".format(sc, mc)
-        command += "ASSERT({}[7:7] = {}[1:1]);\n".format(sc, mc)
-        command += "ASSERT({}[8:8] = {}[9:9]);\n".format(sc, mc)
-        command += "ASSERT({}[9:9] = {}[3:3]);\n".format(sc, mc)
-        command += "ASSERT({}[10:10] = {}[12:12]);\n".format(sc, mc)
-        command += "ASSERT({}[11:11] = {}[6:6]);\n".format(sc, mc)
-        command += "ASSERT({}[12:12] = {}[7:7]);\n".format(sc, mc)
-        command += "ASSERT({}[13:13] = {}[13:13]);\n".format(sc, mc)
-        command += "ASSERT({}[14:14] = {}[2:2]);\n".format(sc, mc)
-        command += "ASSERT({}[15:15] = {}[8:8]);\n".format(sc, mc)
+        permutation = [0x0, 0xa, 0x5, 0xf, 0xe, 0x4, 0xb, 0x1,
+                       0x9, 0x3, 0xc, 0x6, 0x7, 0xd, 0x2, 0x8]
+
+        for idx, val in enumerate(permutation):
+            command += "ASSERT({0}[{1}:{2}] = {3}[{4}:{5}]);\n".format(
+                sc, 4*idx + 3, 4*idx, mc, 4*val + 3, 4*val)
 
         #MixColumns
         # 0 1 1 1       x0      x1 + x2 + x3
@@ -115,20 +105,21 @@ class MidoriCipher(AbstractCipher):
         # 1 1 0 1       x2      x0 + x1 + x3
         # 1 1 1 0       x3      x0 + x1 + x2
 
-        for i in range(4):
-            offset0 = i*4+0
-            offset1 = i*4+1
-            offset2 = i*4+2
-            offset3 = i*4+3
+        for col in range(4):
+            for bit in range(4):
+                offset0 = col*16 + 0 + bit
+                offset1 = col*16 + 4 + bit
+                offset2 = col*16 + 8 + bit
+                offset3 = col*16 + 12 + bit
 
-            command += "ASSERT(BVXOR(BVXOR({4}[{1}:{1}], {4}[{2}:{2}]), {4}[{3}:{3}]) \
-                         = {5}[{0}:{0}]);\n".format(offset0, offset1, offset2, offset3, mc, sb_out)
-            command += "ASSERT(BVXOR(BVXOR({4}[{0}:{0}], {4}[{2}:{2}]), {4}[{3}:{3}]) \
-                         = {5}[{1}:{1}]);\n".format(offset0, offset1, offset2, offset3, mc, sb_out)
-            command += "ASSERT(BVXOR(BVXOR({4}[{0}:{0}], {4}[{1}:{1}]), {4}[{3}:{3}]) \
-                         = {5}[{2}:{2}]);\n".format(offset0, offset1, offset2, offset3, mc, sb_out)
-            command += "ASSERT(BVXOR(BVXOR({4}[{0}:{0}], {4}[{1}:{1}]), {4}[{2}:{2}]) \
-                         = {5}[{3}:{3}]);\n".format(offset0, offset1, offset2, offset3, mc, sb_out)
+                command += "ASSERT(BVXOR(BVXOR({4}[{1}:{1}], {4}[{2}:{2}]), {4}[{3}:{3}]) \
+                             = {5}[{0}:{0}]);\n".format(offset0, offset1, offset2, offset3, mc, sb_out)
+                command += "ASSERT(BVXOR(BVXOR({4}[{0}:{0}], {4}[{2}:{2}]), {4}[{3}:{3}]) \
+                             = {5}[{1}:{1}]);\n".format(offset0, offset1, offset2, offset3, mc, sb_out)
+                command += "ASSERT(BVXOR(BVXOR({4}[{0}:{0}], {4}[{1}:{1}]), {4}[{3}:{3}]) \
+                             = {5}[{2}:{2}]);\n".format(offset0, offset1, offset2, offset3, mc, sb_out)
+                command += "ASSERT(BVXOR(BVXOR({4}[{0}:{0}], {4}[{1}:{1}]), {4}[{2}:{2}]) \
+                             = {5}[{3}:{3}]);\n".format(offset0, offset1, offset2, offset3, mc, sb_out)
 
 
         # Substitution Layer

@@ -107,7 +107,9 @@ def loadparameters(args):
               "nummessages" : 1,
               "timelimit" : -1,
               "fixedVariables" : {},
-              "blockedCharacteristics" : []}
+              "blockedCharacteristics" : [],
+              "rate" : 160,
+              "capacity" : 240}
 
     # Check if there is an input file specified
     if args.inputfile:
@@ -158,6 +160,12 @@ def loadparameters(args):
     if args.latex:
         params["latex"] = args.latex[0]
 
+    if args.rate:
+        params["rate"] = int(args.rate[0])
+
+    if args.capacity:
+        params["capacity"] = int(args.capacity[0])
+
     return params
 
 
@@ -200,6 +208,8 @@ def main():
                                                      "read the parameters.")
     parser.add_argument('--dot', nargs=1, help="Print the trail in .dot format.")
     parser.add_argument('--latex', nargs=1, help="Print the trail in .tex format.")
+    parser.add_argument('--rate', nargs=1, help="For Keccak only. Set the rate.")
+    parser.add_argument('--capacity', nargs=1, help="For Keccak only. Set the capacity.")
 
     # Parse command line arguments and construct parameter list.
     args = parser.parse_args()

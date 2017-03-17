@@ -8,7 +8,7 @@ from cryptanalysis import search
 from ciphers import (simon, speck, simonlinear, keccak, keccakdiff,
                      siphash, simonrk, chaskeymachalf, simonkeyrc,
                      ketje, ascon, salsa, chacha, skinny, present, 
-                     midori)
+                     midori, lblock)
 from config import PATH_STP, PATH_CRYPTOMINISAT, PATH_BOOLECTOR
 
 from argparse import ArgumentParser, RawTextHelpFormatter
@@ -36,9 +36,10 @@ def startsearch(tool_parameters):
                     "ascon" : ascon.AsconCipher(),
                     "salsa" : salsa.SalsaCipher(),
                     "chacha" : chacha.ChaChaCipher(),
-					"skinny" : skinny.SkinnyCipher(),
-					"present" : present.PresentCipher(),
-					"midori" : midori.MidoriCipher()}
+                    "skinny" : skinny.SkinnyCipher(),
+                    "present" : present.PresentCipher(),
+                    "midori" : midori.MidoriCipher(),
+                    "lblock" : lblock.LBlockCipher()}
 
     cipher = None
 

@@ -203,6 +203,8 @@ def add4bitSbox(sbox, variables):
 
     The probability of the transitions is
     2^-{hw(w0||w1||w2||w3)}
+
+    w ... hamming weight from the DDT table
     """
     assert(len(sbox) == 16)
     assert(len(variables) == 12)

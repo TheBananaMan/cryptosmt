@@ -23,7 +23,7 @@ class SPARXCipher(AbstractCipher):
         """
         Returns the print format.
         """
-        return ['x', 'y', 'w']
+        return ['X0', 'X1', 'Y0', 'Y1', 'w']
 
     def createSTP(self, stp_filename, parameters):
         """
@@ -41,31 +41,53 @@ class SPARXCipher(AbstractCipher):
             stp_file.write(header)
 
             # Setup variables
-            # x = left, y = right 
-            x = ["X{}".format(i) for i in range(rounds + 1)]
-            y = ["Y{}".format(i) for i in range(rounds + 1)]
+            # x0, x1 = left, y0, y1 = right 
+            x0 = ["X0{}".format(i) for i in range(rounds + 1)]
+            x1 = ["X1{}".format(i) for i in range(rounds + 1)]
+            x0_after_A = ["X0A{}".format(i) for i in range(rounds + 1)]
+            x1_after_A = ["X1A{}".format(i) for i in range(rounds + 1)]
+            x0_after_L = ["X0L{}".format(i) for i in range(rounds + 1)]
+            x1_after_L = ["X1L{}".format(i) for i in range(rounds + 1)]
+            y0 = ["Y0{}".format(i) for i in range(rounds + 1)]
+            y1 = ["Y1{}".format(i) for i in range(rounds + 1)]
+            y0_after_A = ["Y0A{}".format(i) for i in range(rounds + 1)]
+            y1_after_A = ["Y1A{}".format(i) for i in range(rounds + 1)]
 
             # w = weight
             w = ["w{}".format(i) for i in range(rounds)]
 
-            stpcommands.setupVariables(stp_file, x, wordsize)
-            stpcommands.setupVariables(stp_file, y, wordsize)
+            stpcommands.setupVariables(stp_file, x0, wordsize)
+            stpcommands.setupVariables(stp_file, x1, wordsize)
+            stpcommands.setupVariables(stp_file, x0_after_A, wordsize)
+            stpcommands.setupVariables(stp_file, x1_after_A, wordsize)
+            stpcommands.setupVariables(stp_file, x0_after_L, wordsize)
+            stpcommands.setupVariables(stp_file, x1_after_L, wordsize)
+            stpcommands.setupVariables(stp_file, y0, wordsize)
+            stpcommands.setupVariables(stp_file, y1, wordsize)
+            stpcommands.setupVariables(stp_file, y0_after_A, wordsize)
+            stpcommands.setupVariables(stp_file, y1_after_A, wordsize)
             stpcommands.setupVariables(stp_file, w, wordsize)
 
             stpcommands.setupWeightComputation(stp_file, weight, w, wordsize)
 
             for i in range(rounds):
-                self.setupSPARXRound(stp_file, x[i], y[i], x[i+1], y[i+1],
+                self.setupSPARXRound(stp_file, x0[i], x1[i], y0[i], y1[i],
+                                     x0_after_A[i], x1_after_A[i],
+                                     x0_after_L[i], x1_after_L[i],
+                                     y0_after_A[i], y1_after_A[i],
+                                     x0[i+1], x1[i+1], y0[i+1], y1[i+1],
                                      w[i], wordsize)
 
             # No all zero characteristic
-            stpcommands.assertNonZero(stp_file, x+y, wordsize)
+            stpcommands.assertNonZero(stp_file, x0+x1+y0+y1, wordsize)
 
             # Iterative characteristics only
             # Input difference = Output difference
             if parameters["iterative"]:
-                stpcommands.assertVariableValue(stp_file, x[0], x[rounds])
-                stpcommands.assertVariableValue(stp_file, y[0], y[rounds])
+                stpcommands.assertVariableValue(stp_file, x0[0], x0[rounds])
+                stpcommands.assertVariableValue(stp_file, x1[0], x1[rounds])
+                stpcommands.assertVariableValue(stp_file, y0[0], y0[rounds])
+                stpcommands.assertVariableValue(stp_file, y1[0], y1[rounds])
 
             for key, value in parameters["fixedVariables"].items():
                 stpcommands.assertVariableValue(stp_file, key, value)
@@ -77,27 +99,35 @@ class SPARXCipher(AbstractCipher):
 
         return
 
-    def setupSPARXRound(self, stp_file, x_in, y_in, x_out, y_out, w, wordsize):
+    def setupSPARXRound(self, stp_file, x0_in, x1_in, y0_in, y1_in,
+                        x0_after_A, x1_after_A, x0_after_L, x1_after_L,
+                        y0_after_A, y1_after_A, x0_out, x1_out, y0_out, y1_out,
+                        w, wordsize):
         """
         Model for differential behaviour of one step SPARX
         """
         command = ""
 
-        for i in range(self.rounds_per_step):
-            command += self.A(x_in[0:16], x_in[16:32], x_in[0:16], x_in[16:32])
 
         for i in range(self.rounds_per_step):
-            command += self.A(y_in[0:16], y_in[16:32], y_in[0:16], y_in[16:32])
+            command += self.A(x0_in, x1_in, x0_after_A, x1_after_A)
 
-        command += self.L(x_in[0:16], x_in[16:32], x_in[0:16], x_in[16:32])
+        for i in range(self.rounds_per_step):
+            command += self.A(y0_in, y1_in, y0_after_A, y1_after_A)
+
+        command += self.L(x0_after_A, x1_after_A, x0_after_L, x1_after_L)
 
         #Assert(x_out = L(A^a(x_in)) xor A^a(y_in))
-        command += "ASSERT(" + x_out + " = "
-        command += "BVXOR(" + x_in + " , " + y_in + ")"
+        command += "ASSERT(" + x0_out + " = "
+        command += "BVXOR(" + x0_after_L + " , " + y0_after_A + ")"
+        command += ");\n"
+        command += "ASSERT(" + x1_out + " = "
+        command += "BVXOR(" + x1_after_L + " , " + y1_after_A + ")"
         command += ");\n"
 
-        #Assert(y_out = A^a(x_in)
-        command += "ASSERT({} = {});\n".format(y_out, x_in)
+        #Assert(y_in = A^a(x_in)
+        command += "ASSERT({} = {});\n".format(y0_out, x0_after_A)
+        command += "ASSERT({} = {});\n".format(y1_out, x1_after_A)
 
         stp_file.write(command)
         return

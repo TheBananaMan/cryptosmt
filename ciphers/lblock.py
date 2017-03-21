@@ -57,8 +57,8 @@ class LBlockCipher(AbstractCipher):
             stpcommands.setupWeightComputation(stp_file, weight, w, wordsize)
 
             for i in range(rounds):
-                self.setupLBlockRound(stp_file, x[i], y[i], x[i+1], [i+1],
-                                      f_out, s_out, w, wordsize)
+                self.setupLBlockRound(stp_file, x[i], y[i], x[i+1], y[i+1],
+                                      f_out[i], s_out[i], w[i], wordsize)
 
             # No all zero characteristic
             stpcommands.assertNonZero(stp_file, x+y, wordsize)
@@ -94,7 +94,7 @@ class LBlockCipher(AbstractCipher):
         command += self.F(x_in, s_out, f_out, w)
 
         #Assert XOR
-        command += "ASSERT({} = BVXOR({}, {}))".format(x_out, f_out, y_in_rot)
+        command += "ASSERT({} = BVXOR({}, {}));\n".format(x_out, f_out, y_in_rot)
 
         stp_file.write(command)
         return
@@ -236,10 +236,10 @@ class LBlockCipher(AbstractCipher):
         command += stpcommands.add4bitSbox(s7, variables)
 
         # Permutation Layer
-        command += "ASSERT({0}[7:4]   = {1}[3:0]);\n".format(s_out, f_out)
+        command += "ASSERT({0}[7:4] = {1}[3:0]);\n".format(s_out, f_out)
         command += "ASSERT({0}[15:12] = {1}[7:4]);\n".format(s_out, f_out)
-        command += "ASSERT({0}[3:0]   = {1}[11:8]);\n".format(s_out, f_out)
-        command += "ASSERT({0}[11:7]  = {1}[15:12]);\n".format(s_out, f_out)
+        command += "ASSERT({0}[3:0] = {1}[11:8]);\n".format(s_out, f_out)
+        command += "ASSERT({0}[11:8] = {1}[15:12]);\n".format(s_out, f_out)
 
         command += "ASSERT({0}[23:20] = {1}[19:16]);\n".format(s_out, f_out)
         command += "ASSERT({0}[31:28] = {1}[23:20]);\n".format(s_out, f_out)

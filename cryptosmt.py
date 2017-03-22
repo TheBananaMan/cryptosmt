@@ -62,6 +62,8 @@ def startsearch(tool_parameters):
         search.findBestConstants(cipher, tool_parameters)
     elif tool_parameters["mode"] == 4:
         search.computeProbabilityOfDifferentials(cipher, tool_parameters)
+    elif tool_parameters["mode"] == 5:
+        search.findOptimalTrailsMatsui(cipher, tool_parameters)
 
     return
 
@@ -100,6 +102,7 @@ def loadparameters(args):
               "rounds" : 5,
               "mode" : 0,
               "wordsize" : 16,
+              "blocksize" : 64,
               "sweight" : 0,
               "endweight" : 1000,
               "iterative" : False,
@@ -134,6 +137,9 @@ def loadparameters(args):
 
     if args.wordsize:
         params["wordsize"] = args.wordsize[0]
+
+    if args.blocksize:
+        params["blocksize"] = args.blocksize[0]
 
     if args.sweight:
         params["sweight"] = args.sweight[0]
@@ -190,6 +196,8 @@ def main():
                         help="The number of rounds for the cipher")
     parser.add_argument('--wordsize', nargs=1, type=int,
                         help="Wordsize used for the cipher.")
+    parser.add_argument('--blocksize', nargs=1, type=int,
+                        help="Blocksize used for the cipher.")
     parser.add_argument('--nummessages', nargs=1, type=int,
                         help="Number of message blocks.")
     parser.add_argument('--mode', nargs=1, type=int, 
@@ -199,7 +207,8 @@ def main():
                         "the round specified\n"
                         "2 = search all characteristic for a specific weight\n"
                         "3 = used for key recovery\n"
-                        "4 = determine the probability of the differential\n")
+                        "4 = determine the probability of the differential\n"
+                        "5 = calculate best differential probability using matsui's algorithm\n")
     parser.add_argument('--timelimit', nargs=1, type=int,
                         help="Set a timelimit for the search in seconds.")
     parser.add_argument('--iterative', action="store_true",

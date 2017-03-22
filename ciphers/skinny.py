@@ -28,17 +28,18 @@ class SkinnyCipher(AbstractCipher):
         the given parameters.
         """
 
+        blocksize = parameters["blocksize"]
         wordsize = parameters["wordsize"]
         rounds = parameters["rounds"]
         weight = parameters["sweight"]
 
-        if wordsize != 64:
-            print("Only wordsize of 64-bit supported.")
+        if blocksize != 64:
+            print("Only blocksize of 64-bit supported.")
             exit(1)
 
         with open(stp_filename, 'w') as stp_file:
             header = ("% Input File for STP\n% Skinny w={}"
-                      "rounds={}\n\n\n".format(wordsize, rounds))
+                      "rounds={}\n\n\n".format(blocksize, rounds))
             stp_file.write(header)
 
             # Setup variables
@@ -49,19 +50,19 @@ class SkinnyCipher(AbstractCipher):
             # w = weight
             w = ["w{}".format(i) for i in range(rounds)]
 
-            stpcommands.setupVariables(stp_file, sc, wordsize)
-            stpcommands.setupVariables(stp_file, sr, wordsize)
-            stpcommands.setupVariables(stp_file, mc, wordsize)
-            stpcommands.setupVariables(stp_file, w, wordsize)
+            stpcommands.setupVariables(stp_file, sc, blocksize)
+            stpcommands.setupVariables(stp_file, sr, blocksize)
+            stpcommands.setupVariables(stp_file, mc, blocksize)
+            stpcommands.setupVariables(stp_file, w, blocksize)
 
-            stpcommands.setupWeightComputation(stp_file, weight, w, wordsize)
+            stpcommands.setupWeightComputation(stp_file, weight, w, blocksize)
 
             for i in range(rounds):
                 self.setupSkinnyRound(stp_file, sc[i], sr[i], mc[i], sc[i+1], 
-                                      w[i], wordsize)
+                                      w[i], blocksize)
 
             # No all zero characteristic
-            stpcommands.assertNonZero(stp_file, sc, wordsize)
+            stpcommands.assertNonZero(stp_file, sc, blocksize)
 
             # Iterative characteristics only
             # Input difference = Output difference
@@ -72,13 +73,13 @@ class SkinnyCipher(AbstractCipher):
                 stpcommands.assertVariableValue(stp_file, key, value)
 
             for char in parameters["blockedCharacteristics"]:
-                stpcommands.blockCharacteristic(stp_file, char, wordsize)
+                stpcommands.blockCharacteristic(stp_file, char, blocksize)
 
             stpcommands.setupQuery(stp_file)
 
         return
 
-    def setupSkinnyRound(self, stp_file, sc_in, sr, mc, sc_out, w, wordsize):
+    def setupSkinnyRound(self, stp_file, sc_in, sr, mc, sc_out, w, blocksize):
         """
         Model for differential behaviour of one round Skinny
         """

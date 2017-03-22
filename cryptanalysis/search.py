@@ -7,6 +7,7 @@ Created on Apr 3, 2014
 from parser import parsesolveroutput
 from config import (PATH_STP, PATH_BOOLECTOR, PATH_CRYPTOMINISAT, MAX_WEIGHT,
                     MAX_CHARACTERISTICS)
+from cryptanalysis import matsui
 
 import subprocess
 import random
@@ -355,3 +356,10 @@ def foundSolution(solver_result):
     Check if a solution was found.
     """
     return "Valid" not in solver_result and "unsat" not in solver_result
+
+def findOptimalTrailsMatsui(cipher, parameters):
+    """
+    Computes the optimal differential trail probability using matsui's algorithm
+    """
+    
+    return 

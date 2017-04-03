@@ -1,5 +1,5 @@
 '''
-Created on Mar 20, 2017
+Created on Mar 29, 2017
 
 @author: ralph
 '''
@@ -10,13 +10,13 @@ from ciphers.cipher import AbstractCipher
 from parser.stpcommands import getStringRightRotate as rotr
 from parser.stpcommands import getStringLeftRotate as rotl
 
-class SPARXCipher(AbstractCipher):
+class SPARXRoundCipher(AbstractCipher):
     """
     Represents the differential behaviour of SPARX and can be used
     to find differential characteristics for the given parameters.
     """
 
-    name = "sparx"
+    name = "sparxround"
     rounds_per_step = 3
 
     def getFormatString(self):
@@ -76,7 +76,7 @@ class SPARXCipher(AbstractCipher):
                                      x0_after_L[i], x1_after_L[i],
                                      y0_after_A[i], y1_after_A[i],
                                      x0[i+1], x1[i+1], y0[i+1], y1[i+1],
-                                     w[i], wordsize)
+                                     w[i], wordsize, rounds)
 
             # No all zero characteristic
             stpcommands.assertNonZero(stp_file, x0+x1+y0+y1, wordsize)
@@ -102,32 +102,37 @@ class SPARXCipher(AbstractCipher):
     def setupSPARXRound(self, stp_file, x0_in, x1_in, y0_in, y1_in,
                         x0_after_A, x1_after_A, x0_after_L, x1_after_L,
                         y0_after_A, y1_after_A, x0_out, x1_out, y0_out, y1_out,
-                        w, wordsize):
+                        w, wordsize, rounds):
         """
         Model for differential behaviour of one step SPARX
         """
         command = ""
 
+        # left
+        command += self.A(x0_in, x1_in, x0_after_A, x1_after_A, w, wordsize)
+        #right
+        command += self.A(y0_in, y1_in, y0_after_A, y1_after_A, w, wordsize)
 
-        for i in range(self.rounds_per_step):
-            command += self.A(x0_in, x1_in, x0_after_A, x1_after_A, w, wordsize)
+        # every step
+        if rounds % self.rounds_per_step:
+            command += self.L(x0_after_A, x1_after_A, x0_after_L, x1_after_L)
 
-        for i in range(self.rounds_per_step):
-            command += self.A(y0_in, y1_in, y0_after_A, y1_after_A, w, wordsize)
+            #Assert(x_out = L(A^a(x_in)) xor A^a(y_in))
+            command += "ASSERT(" + x0_out + " = "
+            command += "BVXOR(" + x0_after_L + " , " + y0_after_A + ")"
+            command += ");\n"
+            command += "ASSERT(" + x1_out + " = "
+            command += "BVXOR(" + x1_after_L + " , " + y1_after_A + ")"
+            command += ");\n"
 
-        command += self.L(x0_after_A, x1_after_A, x0_after_L, x1_after_L)
-
-        #Assert(x_out = L(A^a(x_in)) xor A^a(y_in))
-        command += "ASSERT(" + x0_out + " = "
-        command += "BVXOR(" + x0_after_L + " , " + y0_after_A + ")"
-        command += ");\n"
-        command += "ASSERT(" + x1_out + " = "
-        command += "BVXOR(" + x1_after_L + " , " + y1_after_A + ")"
-        command += ");\n"
-
-        #Assert(y_in = A^a(x_in)
-        command += "ASSERT({} = {});\n".format(y0_out, x0_after_A)
-        command += "ASSERT({} = {});\n".format(y1_out, x1_after_A)
+            #Assert(y_in = A^a(x_in)
+            command += "ASSERT({} = {});\n".format(y0_out, x0_after_A)
+            command += "ASSERT({} = {});\n".format(y1_out, x1_after_A)
+        else:
+            command += "ASSERT({} = {});\n".format(x0_after_A, x0_out)
+            command += "ASSERT({} = {});\n".format(x1_after_A, x1_out)
+            command += "ASSERT({} = {});\n".format(y0_after_A, y0_out)
+            command += "ASSERT({} = {});\n".format(y1_after_A, y1_out)
 
         stp_file.write(command)
         return

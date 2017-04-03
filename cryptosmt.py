@@ -8,7 +8,7 @@ from cryptanalysis import search
 from ciphers import (simon, speck, simonlinear, keccak, keccakdiff,
                      siphash, simonrk, chaskeymachalf, simonkeyrc,
                      ketje, ascon, salsa, chacha, skinny, present, 
-                     midori, lblock, sparx)
+                     midori, lblock, sparx, sparxround)
 from config import PATH_STP, PATH_CRYPTOMINISAT, PATH_BOOLECTOR
 
 from argparse import ArgumentParser, RawTextHelpFormatter
@@ -40,7 +40,8 @@ def startsearch(tool_parameters):
                     "present" : present.PresentCipher(),
                     "midori" : midori.MidoriCipher(),
                     "lblock" : lblock.LBlockCipher(),
-                    "sparx" : sparx.SPARXCipher()}
+                    "sparx" : sparx.SPARXCipher(),
+                    "sparxround" : sparxround.SPARXRoundCipher()}
 
     cipher = None
 
@@ -201,7 +202,7 @@ def main():
     parser.add_argument('--nummessages', nargs=1, type=int,
                         help="Number of message blocks.")
     parser.add_argument('--mode', nargs=1, type=int, 
-                        choices=[0, 1, 2, 3, 4], help=
+                        choices=[0, 1, 2, 3, 4, 5], help=
                         "0 = search characteristic for fixed round\n"
                         "1 = search characteristic for all rounds starting at"
                         "the round specified\n"

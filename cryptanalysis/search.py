@@ -361,5 +361,12 @@ def findOptimalTrailsMatsui(cipher, parameters):
     """
     Computes the optimal differential trail probability using matsui's algorithm
     """
-    
+    matsuisAlgorithm = matsui.MatsuisAlgorithm()
+
+    # do some precomputations
+    matsuisAlgorithm.calculateDifferentialDistributionTable(cipher)
+
+    # run Matsui's algorithm
+    matsuisAlgorithm.procedure_round_1(cipher)
+
     return 

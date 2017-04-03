@@ -15,6 +15,7 @@ class SkinnyCipher(AbstractCipher):
     """
 
     name = "skinny"
+    sbox = [0xc, 6, 9, 0, 1, 0xa, 2, 0xb, 3, 8, 5, 0xd, 4, 0xe, 7, 0xf]
 
     def getFormatString(self):
         """

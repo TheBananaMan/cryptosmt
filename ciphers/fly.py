@@ -124,7 +124,7 @@ class FlyCipher(AbstractCipher):
                          "{0}[{1}:{1}]".format(w, 8*i + 7),
                          "{0}[{1}:{1}]".format(w, 8*i + 6),
                          "{0}[{1}:{1}]".format(w, 8*i + 5),
-                         "{0}[{1}:{1}]".format(w, 8*i + 4)
+                         "{0}[{1}:{1}]".format(w, 8*i + 4),
                          "{0}[{1}:{1}]".format(w, 8*i + 3),
                          "{0}[{1}:{1}]".format(w, 8*i + 2),
                          "{0}[{1}:{1}]".format(w, 8*i + 1),

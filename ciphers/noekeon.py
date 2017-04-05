@@ -95,7 +95,7 @@ class NoekeonCipher(AbstractCipher):
             stpcommands.setupVariables(stp_file, gamma3, wordsize)
             stpcommands.setupVariables(stp_file, w, wordsize*4)
 
-            stpcommands.setupWeightComputation(stp_file, weight, w, wordsize)
+            stpcommands.setupWeightComputation(stp_file, weight, w, wordsize*4)
 
             for i in range(rounds):
                 self.setupNoekeonRound(stp_file, 
@@ -141,10 +141,10 @@ class NoekeonCipher(AbstractCipher):
         """
         command = ""
 
-        command += theta(a0_in, a1_in, a2_in, a3_in, theta0, theta1, theta2, theta3, wordsize)
-        command += pi1(theta0, theta1, theta2, theta3, pi10, pi11, pi12, pi13, wordsize)
-        command += gamma(pi10, pi11, pi12, pi13, gamma0, gamma1, gamma2, gamma3, w)
-        command += pi2(gamma0, gamma1, gamma2, gamma3, a0_out, a1_out, a2_out, a3_out, wordsize)
+        command += self.theta(a0_in, a1_in, a2_in, a3_in, theta0, theta1, theta2, theta3, wordsize)
+        command += self.pi1(theta0, theta1, theta2, theta3, pi10, pi11, pi12, pi13, wordsize)
+        command += self.gamma(pi10, pi11, pi12, pi13, gamma0, gamma1, gamma2, gamma3, w)
+        command += self.pi2(gamma0, gamma1, gamma2, gamma3, a0_out, a1_out, a2_out, a3_out, wordsize)
 
         stp_file.write(command)
         return
@@ -233,10 +233,10 @@ class NoekeonCipher(AbstractCipher):
                          "{0}[{1}:{1}]".format(out3, 4*i + 2),
                          "{0}[{1}:{1}]".format(out3, 4*i + 1),
                          "{0}[{1}:{1}]".format(out3, 4*i + 0),
-                         "{0}[{1}:{1}]".format(w, 4*i + 3 + 128),
-                         "{0}[{1}:{1}]".format(w, 4*i + 2 + 128),
-                         "{0}[{1}:{1}]".format(w, 4*i + 1 + 128),
-                         "{0}[{1}:{1}]".format(w, 4*i + 0 + 128)]
+                         "{0}[{1}:{1}]".format(w, 4*i + 3 + 96),
+                         "{0}[{1}:{1}]".format(w, 4*i + 2 + 96),
+                         "{0}[{1}:{1}]".format(w, 4*i + 1 + 96),
+                         "{0}[{1}:{1}]".format(w, 4*i + 0 + 96)]
             command += stpcommands.add4bitSbox(noekeon_sbox, variables)
 
         return command

@@ -87,9 +87,9 @@ class Fly4BitCipher(AbstractCipher):
         fly_sbox = [0, 0xa, 4, 0xf, 0xc, 7, 2, 8, 0xd, 0xe, 9 , 0xb, 5, 6, 3, 1]
 
         for i in range(8):
-            hixorlo = "BVXOR({0}[{1}:{2}], {0}[{3}:{4})".format(s_in, 8*i+3, 8*i+0, 8*i+7, 8*i+4)
+            hixorlo = "BVXOR({0}[{1}:{2}], {0}[{3}:{4}])".format(s_in, 8*i+3, 8*i+0, 8*i+7, 8*i+4)
 
-            w2 = "BVXOR({0}[{1}:{2}], {0}[{3}:{4})".format(w, 8*i+3, 8*i+0, 8*i+7, 8*i+4)
+            w2 = "BVXOR({0}[{1}:{2}], {0}[{3}:{4}])".format(w, 8*i+3, 8*i+0, 8*i+7, 8*i+4)
             #Sbox 1 - center
             #TODO calculate weight correct for sbox
             variables = ["{0}[{1}:{1}]".format(hixorlo, 4*i + 3),

@@ -50,7 +50,7 @@ class Fly4BitCipher(AbstractCipher):
             w = ["w{}".format(i) for i in range(rounds)]
 
             stpcommands.setupVariables(stp_file, s, wordsize)
-            stpcommands.setupVariables(stp_file, sbox1, wordsize/2)
+            stpcommands.setupVariables(stp_file, sbox1, int(wordsize/2))
             stpcommands.setupVariables(stp_file, p, wordsize)
             stpcommands.setupVariables(stp_file, w, wordsize)
 

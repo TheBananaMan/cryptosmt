@@ -8,8 +8,8 @@ from cryptanalysis import search
 from ciphers import (simon, speck, simonlinear, keccak, keccakdiff,
                      siphash, simonrk, chaskeymachalf, simonkeyrc,
                      ketje, ascon, salsa, chacha, skinny, present, 
-                     midori, lblock, sparx, sparxround, fly, twine,
-                     noekeon)
+                     midori, lblock, sparx, sparxround, fly, fly4bit,
+                     twine, noekeon)
 from config import PATH_STP, PATH_CRYPTOMINISAT, PATH_BOOLECTOR
 
 from argparse import ArgumentParser, RawTextHelpFormatter
@@ -44,6 +44,7 @@ def startsearch(tool_parameters):
                     "sparx" : sparx.SPARXCipher(),
                     "sparxround" : sparxround.SPARXRoundCipher(),
                     "fly" : fly.FlyCipher(),
+                    "fly4bit" : fly4bit.Fly4BitCipher(),
                     "twine" : twine.TwineCipher(),
                     "noekeon" : noekeon.NoekeonCipher()}
 

@@ -1,0 +1,13 @@
+# Example input file for SIMON64 - 12 rounds to find all characteristics 
+---
+cipher: simon
+sweight: 36
+rounds: 12
+wordsize: 32
+mode: 4
+fixedVariables:
+- x0: "0x00400000"
+- y0: "0x01110100"
+- x12: "0x00004000"
+- y12: "0x00001100"
+...

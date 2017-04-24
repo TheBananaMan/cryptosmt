@@ -40,7 +40,7 @@ class NoekeonCipher(AbstractCipher):
             stp_file.write(header)
 
             # Setup variables
-            # 
+            #
             a0 = ["A0{}".format(i) for i in range(rounds + 1)]
             a1 = ["A1{}".format(i) for i in range(rounds + 1)]
             a2 = ["A2{}".format(i) for i in range(rounds + 1)]
@@ -98,13 +98,13 @@ class NoekeonCipher(AbstractCipher):
             stpcommands.setupWeightComputation(stp_file, weight, w, wordsize*4)
 
             for i in range(rounds):
-                self.setupNoekeonRound(stp_file, 
+                self.setupNoekeonRound(stp_file,
                           a0[i], a1[i], a2[i], a3[i],
                           theta0[i], theta1[i], theta2[i], theta3[i],
-                          gamma0[i], gamma1[i], gamma2[i], gamma3[i], 
+                          gamma0[i], gamma1[i], gamma2[i], gamma3[i],
                           pi10[i], pi11[i], pi12[i], pi13[i],
                           pi20[i], pi21[i], pi22[i], pi23[i],
-                          a0[i+1], a1[i+1], a2[i+1], a3[i+1], 
+                          a0[i+1], a1[i+1], a2[i+1], a3[i+1],
                           w[i], wordsize)
 
             # No all zero characteristic
@@ -128,13 +128,13 @@ class NoekeonCipher(AbstractCipher):
 
         return
 
-    def setupNoekeonRound(self, stp_file, 
+    def setupNoekeonRound(self, stp_file,
                           a0_in, a1_in, a2_in, a3_in,
                           theta0, theta1, theta2, theta3,
-                          gamma0, gamma1, gamma2, gamma3, 
+                          gamma0, gamma1, gamma2, gamma3,
                           pi10, pi11, pi12, pi13,
                           pi20, pi21, pi22, pi23,
-                          a0_out, a1_out, a2_out, a3_out, 
+                          a0_out, a1_out, a2_out, a3_out,
                           w, wordsize):
         """
         Model for differential behaviour of one round NOEKEON
@@ -179,65 +179,79 @@ class NoekeonCipher(AbstractCipher):
         command = ""
 
         noekeon_sbox = [7, 0xA, 2, 0xC, 4, 8, 0xF, 0, 5, 9, 1, 0xE, 3, 0xD, 0xB, 6]
-        for i in range(8):
-            variables = ["{0}[{1}:{1}]".format(in0, 4*i + 3),
-                         "{0}[{1}:{1}]".format(in0, 4*i + 2),
-                         "{0}[{1}:{1}]".format(in0, 4*i + 1),
-                         "{0}[{1}:{1}]".format(in0, 4*i + 0),
-                         "{0}[{1}:{1}]".format(out0, 4*i + 3),
-                         "{0}[{1}:{1}]".format(out0, 4*i + 2),
-                         "{0}[{1}:{1}]".format(out0, 4*i + 1),
-                         "{0}[{1}:{1}]".format(out0, 4*i + 0),
+        for i in range(32):
+            variables = ["{0}[{1}:{1}]".format(in3, i),
+                         "{0}[{1}:{1}]".format(in2, i),
+                         "{0}[{1}:{1}]".format(in1, i),
+                         "{0}[{1}:{1}]".format(in0, i),
+                         "{0}[{1}:{1}]".format(out3, i),
+                         "{0}[{1}:{1}]".format(out2, i),
+                         "{0}[{1}:{1}]".format(out1, i),
+                         "{0}[{1}:{1}]".format(out0, i),
                          "{0}[{1}:{1}]".format(w, 4*i + 3),
                          "{0}[{1}:{1}]".format(w, 4*i + 2),
                          "{0}[{1}:{1}]".format(w, 4*i + 1),
                          "{0}[{1}:{1}]".format(w, 4*i + 0)]
             command += stpcommands.add4bitSbox(noekeon_sbox, variables)
-
-        for i in range(8):
-            variables = ["{0}[{1}:{1}]".format(in1, 4*i + 3),
-                         "{0}[{1}:{1}]".format(in1, 4*i + 2),
-                         "{0}[{1}:{1}]".format(in1, 4*i + 1),
-                         "{0}[{1}:{1}]".format(in1, 4*i + 0),
-                         "{0}[{1}:{1}]".format(out1, 4*i + 3),
-                         "{0}[{1}:{1}]".format(out1, 4*i + 2),
-                         "{0}[{1}:{1}]".format(out1, 4*i + 1),
-                         "{0}[{1}:{1}]".format(out1, 4*i + 0),
-                         "{0}[{1}:{1}]".format(w, 4*i + 3 + 32),
-                         "{0}[{1}:{1}]".format(w, 4*i + 2 + 32),
-                         "{0}[{1}:{1}]".format(w, 4*i + 1 + 32),
-                         "{0}[{1}:{1}]".format(w, 4*i + 0 + 32)]
-            command += stpcommands.add4bitSbox(noekeon_sbox, variables)
-
-        for i in range(8):
-            variables = ["{0}[{1}:{1}]".format(in2, 4*i + 3),
-                         "{0}[{1}:{1}]".format(in2, 4*i + 2),
-                         "{0}[{1}:{1}]".format(in2, 4*i + 1),
-                         "{0}[{1}:{1}]".format(in2, 4*i + 0),
-                         "{0}[{1}:{1}]".format(out2, 4*i + 3),
-                         "{0}[{1}:{1}]".format(out2, 4*i + 2),
-                         "{0}[{1}:{1}]".format(out2, 4*i + 1),
-                         "{0}[{1}:{1}]".format(out2, 4*i + 0),
-                         "{0}[{1}:{1}]".format(w, 4*i + 3 + 64),
-                         "{0}[{1}:{1}]".format(w, 4*i + 2 + 64),
-                         "{0}[{1}:{1}]".format(w, 4*i + 1 + 64),
-                         "{0}[{1}:{1}]".format(w, 4*i + 0 + 64)]
-            command += stpcommands.add4bitSbox(noekeon_sbox, variables)
-
-        for i in range(8):
-            variables = ["{0}[{1}:{1}]".format(in3, 4*i + 3),
-                         "{0}[{1}:{1}]".format(in3, 4*i + 2),
-                         "{0}[{1}:{1}]".format(in3, 4*i + 1),
-                         "{0}[{1}:{1}]".format(in3, 4*i + 0),
-                         "{0}[{1}:{1}]".format(out3, 4*i + 3),
-                         "{0}[{1}:{1}]".format(out3, 4*i + 2),
-                         "{0}[{1}:{1}]".format(out3, 4*i + 1),
-                         "{0}[{1}:{1}]".format(out3, 4*i + 0),
-                         "{0}[{1}:{1}]".format(w, 4*i + 3 + 96),
-                         "{0}[{1}:{1}]".format(w, 4*i + 2 + 96),
-                         "{0}[{1}:{1}]".format(w, 4*i + 1 + 96),
-                         "{0}[{1}:{1}]".format(w, 4*i + 0 + 96)]
-            command += stpcommands.add4bitSbox(noekeon_sbox, variables)
+        # for i in range(8):
+        #     variables = ["{0}[{1}:{1}]".format(in0, 4*i + 3),
+        #                  "{0}[{1}:{1}]".format(in0, 4*i + 2),
+        #                  "{0}[{1}:{1}]".format(in0, 4*i + 1),
+        #                  "{0}[{1}:{1}]".format(in0, 4*i + 0),
+        #                  "{0}[{1}:{1}]".format(out0, 4*i + 3),
+        #                  "{0}[{1}:{1}]".format(out0, 4*i + 2),
+        #                  "{0}[{1}:{1}]".format(out0, 4*i + 1),
+        #                  "{0}[{1}:{1}]".format(out0, 4*i + 0),
+        #                  "{0}[{1}:{1}]".format(w, 4*i + 3),
+        #                  "{0}[{1}:{1}]".format(w, 4*i + 2),
+        #                  "{0}[{1}:{1}]".format(w, 4*i + 1),
+        #                  "{0}[{1}:{1}]".format(w, 4*i + 0)]
+        #     command += stpcommands.add4bitSbox(noekeon_sbox, variables)
+        #
+        # for i in range(8):
+        #     variables = ["{0}[{1}:{1}]".format(in1, 4*i + 3),
+        #                  "{0}[{1}:{1}]".format(in1, 4*i + 2),
+        #                  "{0}[{1}:{1}]".format(in1, 4*i + 1),
+        #                  "{0}[{1}:{1}]".format(in1, 4*i + 0),
+        #                  "{0}[{1}:{1}]".format(out1, 4*i + 3),
+        #                  "{0}[{1}:{1}]".format(out1, 4*i + 2),
+        #                  "{0}[{1}:{1}]".format(out1, 4*i + 1),
+        #                  "{0}[{1}:{1}]".format(out1, 4*i + 0),
+        #                  "{0}[{1}:{1}]".format(w, 4*i + 3 + 32),
+        #                  "{0}[{1}:{1}]".format(w, 4*i + 2 + 32),
+        #                  "{0}[{1}:{1}]".format(w, 4*i + 1 + 32),
+        #                  "{0}[{1}:{1}]".format(w, 4*i + 0 + 32)]
+        #     command += stpcommands.add4bitSbox(noekeon_sbox, variables)
+        #
+        # for i in range(8):
+        #     variables = ["{0}[{1}:{1}]".format(in2, 4*i + 3),
+        #                  "{0}[{1}:{1}]".format(in2, 4*i + 2),
+        #                  "{0}[{1}:{1}]".format(in2, 4*i + 1),
+        #                  "{0}[{1}:{1}]".format(in2, 4*i + 0),
+        #                  "{0}[{1}:{1}]".format(out2, 4*i + 3),
+        #                  "{0}[{1}:{1}]".format(out2, 4*i + 2),
+        #                  "{0}[{1}:{1}]".format(out2, 4*i + 1),
+        #                  "{0}[{1}:{1}]".format(out2, 4*i + 0),
+        #                  "{0}[{1}:{1}]".format(w, 4*i + 3 + 64),
+        #                  "{0}[{1}:{1}]".format(w, 4*i + 2 + 64),
+        #                  "{0}[{1}:{1}]".format(w, 4*i + 1 + 64),
+        #                  "{0}[{1}:{1}]".format(w, 4*i + 0 + 64)]
+        #     command += stpcommands.add4bitSbox(noekeon_sbox, variables)
+        #
+        # for i in range(8):
+        #     variables = ["{0}[{1}:{1}]".format(in3, 4*i + 3),
+        #                  "{0}[{1}:{1}]".format(in3, 4*i + 2),
+        #                  "{0}[{1}:{1}]".format(in3, 4*i + 1),
+        #                  "{0}[{1}:{1}]".format(in3, 4*i + 0),
+        #                  "{0}[{1}:{1}]".format(out3, 4*i + 3),
+        #                  "{0}[{1}:{1}]".format(out3, 4*i + 2),
+        #                  "{0}[{1}:{1}]".format(out3, 4*i + 1),
+        #                  "{0}[{1}:{1}]".format(out3, 4*i + 0),
+        #                  "{0}[{1}:{1}]".format(w, 4*i + 3 + 96),
+        #                  "{0}[{1}:{1}]".format(w, 4*i + 2 + 96),
+        #                  "{0}[{1}:{1}]".format(w, 4*i + 1 + 96),
+        #                  "{0}[{1}:{1}]".format(w, 4*i + 0 + 96)]
+        #     command += stpcommands.add4bitSbox(noekeon_sbox, variables)
 
         return command
 
@@ -267,4 +281,3 @@ class NoekeonCipher(AbstractCipher):
         command += "ASSERT({0}[31:0] = {1}[31:0]);\n".format(rotr(in3, 2, wordsize), out3)
 
         return command
-

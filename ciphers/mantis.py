@@ -1,7 +1,7 @@
 '''
-Created on Jan 06, 2017
+Created on Apr 18, 2017
 
-@author: ralph
+@author: ralph, kste
 '''
 
 from parser import stpcommands
@@ -10,7 +10,7 @@ from ciphers.cipher import AbstractCipher
 
 class MantisCipher(AbstractCipher):
     """
-    Represents the differential behaviour of MANTIS and can be used
+    Represents the differential behaviour of Mantis and can be used
     to find differential characteristics for the given parameters.
     """
 
@@ -20,11 +20,14 @@ class MantisCipher(AbstractCipher):
         """
         Returns the print format.
         """
-        return ['SC', 'SR', 'MC', 'w']
+        sb = ['SB{}r'.format(i) for i in range(16)]
+        sr = ['SR{}r'.format(i) for i in range(16)]
+        mc = ['MC{}r'.format(i) for i in range(16)]
+        return sb + sr + mc
 
     def createSTP(self, stp_filename, parameters):
         """
-        Creates an STP file to find a characteristic for SIMON with
+        Creates an STP file to find a characteristic for Mantis with
         the given parameters.
         """
 
@@ -32,41 +35,71 @@ class MantisCipher(AbstractCipher):
         rounds = parameters["rounds"]
         weight = parameters["sweight"]
 
-        if wordsize != 64:
-            print("Only wordsize of 64-bit supported.")
+        if wordsize != 4:
+            print("Mantis only supports a wordsize of 4 bits.")
+            exit(1)
+
+        if (rounds - 1) % 2 != 0:
+            print("Mantis only supports a multiple of 2 as the number of rounds.")
             exit(1)
 
         with open(stp_filename, 'w') as stp_file:
-            header = ("% Input File for STP\n% Skinny w={}"
+            header = ("% Input File for STP\n% Mantis w={}"
                       "rounds={}\n\n\n".format(wordsize, rounds))
             stp_file.write(header)
 
             # Setup variables
-            sc = ["SC{}".format(i) for i in range(rounds + 1)]
-            sr = ["SR{}".format(i) for i in range(rounds)]
-            mc = ["MC{}".format(i) for i in range(rounds)]
+            # State is represented as nibbles
+            # 0 4  8 12
+            # 1 5  9 13
+            # 2 6 10 14
+            # 3 7 11 15
 
-            # w = weight
-            w = ["w{}".format(i) for i in range(rounds)]
+            sb = ["SB{}r{}".format(j, i) for i in range(rounds + 1) for j in range(16)]
+            sr = ["SR{}r{}".format(j, i) for i in range(rounds) for j in range(16)]
+            mc = ["MC{}r{}".format(j, i) for i in range(rounds) for j in range(16)]
 
-            stpcommands.setupVariables(stp_file, sc, wordsize)
+            # wn = weight of each S-box
+            wn = ["wn{}r{}".format(j, i) for i in range(rounds + 1) for j in range(16)]  # One Extra for middle round
+
+            stpcommands.setupVariables(stp_file, sb, wordsize)
             stpcommands.setupVariables(stp_file, sr, wordsize)
             stpcommands.setupVariables(stp_file, mc, wordsize)
-            stpcommands.setupVariables(stp_file, w, wordsize)
+            stpcommands.setupVariables(stp_file, wn, wordsize)
 
-            stpcommands.setupWeightComputation(stp_file, weight, w, wordsize)
+            stpcommands.setupWeightComputation(stp_file, weight, wn, wordsize)
 
-            for i in range(rounds):
-                self.setupSkinnyRound(stp_file, sc[i], sr[i], mc[i], sc[i+1], 
-                                      w[i], wordsize)
+            # Forward rounds
+            for rnd in range(rounds // 2):
+                si = 16*rnd
+                ei = 16*(rnd + 1)
+                self.setupMantisForwardRound(stp_file, sb[si:ei], sr[si:ei], mc[si:ei],
+                                             sb[ei:ei + 16], wn[si:ei], wordsize)
+
+            # Middle round
+            si = 16*(rounds // 2)
+            ei = 16*((rounds // 2) + 1)
+            self.setupMantisMiddleRound(stp_file, sb[si:ei], sr[si:ei], mc[si:ei],
+                                        sb[ei:ei + 16], wn[si:ei], wn[ei:ei + 16],
+                                        wordsize)
+
+            # Backward round
+            for rnd in range(rounds // 2 + 1, rounds):
+                si = 16*rnd
+                ei = 16*(rnd + 1)
+                self.setupMantisBackwardRound(stp_file, sb[si:ei], sr[si:ei], mc[si:ei],
+                                              sb[ei:ei + 16], wn[si + 16:ei + 16], wordsize)
+
+
+
 
             # No all zero characteristic
-            stpcommands.assertNonZero(stp_file, sc, wordsize)
+            stpcommands.assertNonZero(stp_file, sb, wordsize)
 
             # Iterative characteristics only
             # Input difference = Output difference
             if parameters["iterative"]:
-                stpcommands.assertVariableValue(stp_file, sc[0], sc[rounds])
+                stpcommands.assertVariableValue(stp_file, sb[0], sb[rounds])
 
             for key, value in parameters["fixedVariables"].items():
                 stpcommands.assertVariableValue(stp_file, key, value)
@@ -78,62 +111,99 @@ class MantisCipher(AbstractCipher):
 
         return
 
-    def setupSkinnyRound(self, stp_file, sc_in, sr, mc, sc_out, w, wordsize):
+    def setupMantisForwardRound(self, stp_file, sb_in, sr, mc, sb_out, wn, wordsize):
         """
-        Model for differential behaviour of one round Skinny
+        Model for differential behaviour of one forward round Mantis.
         """
         command = ""
-        #Add S-box transitions
-        #for i in range(16):
-        #    command += self.addSbox(sc_in, sr, 4*i)
 
-        #ShiftRows
-        command += "ASSERT({}[15:0] = {}[15:0]);\n".format(sr, mc)
+        # SubBytes
+        mantis_sbox = [0xc, 0xa, 0xd, 0x3, 0xe, 0xb, 0xf, 0x7,
+                       0x8, 0x9, 0x1, 0x5, 0x0, 0x2, 0x4, 0x6]
 
-        command += "ASSERT({}[27:16] = {}[31:20]);\n".format(sr, mc)
-        command += "ASSERT({}[31:28] = {}[19:16]);\n".format(sr, mc)
+        for sbox in range(16):
+            command += stpcommands.add4bitSboxNibbles(mantis_sbox, sb_in[sbox], sr[sbox], wn[sbox])
 
-        command += "ASSERT({}[39:32] = {}[47:40]);\n".format(sr, mc)
-        command += "ASSERT({}[47:40] = {}[39:32]);\n".format(sr, mc)
+        # Permute Cells
 
-        command += "ASSERT({}[51:48] = {}[63:60]);\n".format(sr, mc)
-        command += "ASSERT({}[63:52] = {}[59:48]);\n".format(sr, mc)                
+        permutation = [0x0, 0xa, 0x5, 0xf, 0xe, 0x4, 0xb, 0x1,
+                       0x9, 0x3, 0xc, 0x6, 0x7, 0xd, 0x2, 0x8]
+
+        for nibble in range(16):
+            command += "ASSERT({} = {});\n".format(sr[nibble], mc[permutation[nibble]])
 
         #MixColumns
-        command += "ASSERT("
-        command += "{0}[15:0] = {1}[31:16]".format(mc, sc_out);
-        command += ");\n"
+        # 0 1 1 1       x0      x1 + x2 + x3
+        # 1 0 1 1       x1  ->  x0 + x2 + x3
+        # 1 1 0 1       x2      x0 + x1 + x3
+        # 1 1 1 0       x3      x0 + x1 + x2
 
-        command += "ASSERT("
-        command += "BVXOR({0}[31:16], {0}[47:32]) = {1}[47:32]".format(mc, sc_out);
-        command += ");\n"
+        for col in range(4):
+            xorsum = stpcommands.getStringXORn(mc[4*col:(4*(col + 1))])  # Get One column
+            for row in range(4):
+                command += "ASSERT({} = BVXOR({}, {}));\n".format(sb_out[4*col + row],
+                                                                  sr[4*col + row],
+                                                                  xorsum)
 
-        command += "ASSERT("
-        command += "BVXOR({0}[47:32], {0}[15:0]) = {1}[63:48]".format(mc, sc_out);
-        command += ");\n"
+        stp_file.write(command)
+        return
 
-        command += "ASSERT("
-        command += "BVXOR({0}[63:48], {1}[63:48]) = {1}[15:0]".format(mc, sc_out);
-        command += ");\n"
+    def setupMantisMiddleRound(self, stp_file, sb_in, m_in, m_out, sb_out, wn, wn2, wordsize):
+        """
+        Middle round of Mantis.
+        """
 
-        # TODO: correctly compute weight
-        # For now just take the Hamming weight
-        skinny_sbox = [0xc, 6, 9, 0, 1, 0xa, 2, 0xb, 3, 8, 5, 0xd, 4, 0xe, 7, 0xf]
-        for i in range(16):
-            variables = ["{0}[{1}:{1}]".format(sc_in, 4*i + 3),
-                         "{0}[{1}:{1}]".format(sc_in, 4*i + 2),
-                         "{0}[{1}:{1}]".format(sc_in, 4*i + 1),
-                         "{0}[{1}:{1}]".format(sc_in, 4*i + 0),
-                         "{0}[{1}:{1}]".format(sr, 4*i + 3),
-                         "{0}[{1}:{1}]".format(sr, 4*i + 2),
-                         "{0}[{1}:{1}]".format(sr, 4*i + 1),
-                         "{0}[{1}:{1}]".format(sr, 4*i + 0),
-                         "{0}[{1}:{1}]".format(w, 4*i + 3),
-                         "{0}[{1}:{1}]".format(w, 4*i + 2),
-                         "{0}[{1}:{1}]".format(w, 4*i + 1),
-                         "{0}[{1}:{1}]".format(w, 4*i + 0)]
-            command += stpcommands.add4bitSbox(skinny_sbox, variables)
+        command = ""
 
+        # SubBytes
+        mantis_sbox = [0xc, 0xa, 0xd, 0x3, 0xe, 0xb, 0xf, 0x7,
+                       0x8, 0x9, 0x1, 0x5, 0x0, 0x2, 0x4, 0x6]
+
+        for sbox in range(16):
+            command += stpcommands.add4bitSboxNibbles(mantis_sbox, sb_in[sbox], m_in[sbox], wn[sbox])
+
+        # MixColumns
+        for col in range(4):
+            xorsum = stpcommands.getStringXORn(m_in[4*col:(4*(col + 1))])  # Get One column
+            for row in range(4):
+                command += "ASSERT({} = BVXOR({}, {}));\n".format(m_out[4*col + row],
+                                                                  m_in[4*col + row],
+                                                                  xorsum)
+
+        # SubBytes
+        for sbox in range(16):
+            command += stpcommands.add4bitSboxNibbles(mantis_sbox, m_out[sbox], sb_out[sbox], wn2[sbox])
+
+        stp_file.write(command)
+        return
+
+    def setupMantisBackwardRound(self, stp_file, sb_in, sr, mc, sb_out, wn, wordsize):
+        """
+        Model for differential behaviour of one backward round Mantis.
+        """
+        command = ""
+
+        # MixColumns
+        for col in range(4):
+            xorsum = stpcommands.getStringXORn(sb_in[4*col:(4*(col + 1))])  # Get One column
+            for row in range(4):
+                command += "ASSERT({} = BVXOR({}, {}));\n".format(sr[4*col + row],
+                                                                  sb_in[4*col + row],
+                                                                  xorsum)
+
+        # Permute Cells Inverse
+        permutation = [0, 7, 14, 9, 5, 2, 11, 12,
+                       15, 8, 1, 6, 10, 13, 4, 3]
+
+        for nibble in range(16):
+            command += "ASSERT({} = {});\n".format(sr[nibble], mc[permutation[nibble]])
+
+        # Inverse SubBytes
+        mantis_sbox = [0xc, 0xa, 0xd, 0x3, 0xe, 0xb, 0xf, 0x7,
+                       0x8, 0x9, 0x1, 0x5, 0x0, 0x2, 0x4, 0x6]
+
+        for sbox in range(16):
+            command += stpcommands.add4bitSboxNibbles(mantis_sbox, mc[sbox], sb_out[sbox], wn[sbox])
 
         stp_file.write(command)
         return

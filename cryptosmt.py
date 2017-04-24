@@ -7,9 +7,10 @@ Created on Mar 28, 2014
 from cryptanalysis import search
 from ciphers import (simon, speck, simonlinear, keccak, keccakdiff,
                      siphash, simonrk, chaskeymachalf, simonkeyrc,
-                     ketje, ascon, salsa, chacha, skinny, present, 
+                     ketje, ascon, salsa, chacha, skinny, present,
                      midori, lblock, sparx, sparxround, fly, fly4bit,
-                     twine, noekeon)
+                     twine, noekeon, prince, mantis)
+
 from config import PATH_STP, PATH_CRYPTOMINISAT, PATH_BOOLECTOR
 
 from argparse import ArgumentParser, RawTextHelpFormatter
@@ -46,8 +47,9 @@ def startsearch(tool_parameters):
                     "fly" : fly.FlyCipher(),
                     "fly4bit" : fly4bit.Fly4BitCipher(),
                     "twine" : twine.TwineCipher(),
-                    "noekeon" : noekeon.NoekeonCipher()}
-
+                    "noekeon" : noekeon.NoekeonCipher(),
+                    "prince" : prince.PrinceCipher(),
+                    "mantis" : mantis.MantisCipher()}
     cipher = None
 
     if tool_parameters["cipher"] in cipher_suite:
@@ -197,7 +199,7 @@ def main():
     parser.add_argument('--sweight', nargs=1, type=int,
                         help="Starting weight for the trail search.")
     parser.add_argument('--endweight', nargs=1, type=int,
-                        help="Stop search after reaching endweight.")    
+                        help="Stop search after reaching endweight.")
     parser.add_argument('--rounds', nargs=1, type=int,
                         help="The number of rounds for the cipher")
     parser.add_argument('--wordsize', nargs=1, type=int,
@@ -206,7 +208,7 @@ def main():
                         help="Blocksize used for the cipher.")
     parser.add_argument('--nummessages', nargs=1, type=int,
                         help="Number of message blocks.")
-    parser.add_argument('--mode', nargs=1, type=int, 
+    parser.add_argument('--mode', nargs=1, type=int,
                         choices=[0, 1, 2, 3, 4, 5], help=
                         "0 = search characteristic for fixed round\n"
                         "1 = search characteristic for all rounds starting at"

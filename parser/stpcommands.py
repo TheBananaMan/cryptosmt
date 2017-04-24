@@ -188,11 +188,16 @@ def getStringAndShift(a, b, c, shift, wordsize):
         a, b, c, shift, wordsize - 1, "0" * (wordsize // 4))
     return command
 
+def getStringXORn(list_of_values):
+    if len(list_of_values) == 2:
+        return "BVXOR({}, {})".format(list_of_values[0], list_of_values[1])
+    else:
+        return "BVXOR({}, {})".format(list_of_values[0], getStringXORn((list_of_values)[1:]))
 
 def add4bitSbox(sbox, variables):
     """
     Adds the constraints for the S-box and the weight
-    for the differential transition. 
+    for the differential transition.
 
     sbox is a list representing the S-box.
 
@@ -256,10 +261,30 @@ def add4bitSbox(sbox, variables):
 
     return "ASSERT({} = 0bin1);\n".format(cnf[:-2])
 
+def add4bitSboxNibbles(sbox, input_word, output_word, weight):
+    """
+    Adds the conditions for a 4-bit S-box using nibbles.
+    """
+
+    variables = ["{0}[{1}:{1}]".format(input_word, 3),
+                 "{0}[{1}:{1}]".format(input_word, 2),
+                 "{0}[{1}:{1}]".format(input_word, 1),
+                 "{0}[{1}:{1}]".format(input_word, 0),
+                 "{0}[{1}:{1}]".format(output_word, 3),
+                 "{0}[{1}:{1}]".format(output_word, 2),
+                 "{0}[{1}:{1}]".format(output_word, 1),
+                 "{0}[{1}:{1}]".format(output_word, 0),
+                 "{0}[{1}:{1}]".format(weight, 3),
+                 "{0}[{1}:{1}]".format(weight, 2),
+                 "{0}[{1}:{1}]".format(weight, 1),
+                 "{0}[{1}:{1}]".format(weight, 0)]
+
+    return add4bitSbox(sbox, variables)
+
 def add8bitSbox(sbox, variables):
     """
     Adds the constraints for the S-box and the weight
-    for the differential transition. 
+    for the differential transition.
 
     sbox is a list representing the S-box.
 

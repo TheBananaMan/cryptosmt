@@ -8,7 +8,9 @@ from cryptanalysis import search
 from ciphers import (simon, speck, simonlinear, keccak, keccakdiff,
                      siphash, simonrk, chaskeymachalf, simonkeyrc,
                      ketje, ascon, salsa, chacha, skinny, present,
-                     midori, lblock, sparx, sparxround, prince)
+                     midori, lblock, sparx, sparxround, fly, fly4bit,
+                     twine, noekeon, prince, mantis)
+
 from config import PATH_STP, PATH_CRYPTOMINISAT, PATH_BOOLECTOR
 
 from argparse import ArgumentParser, RawTextHelpFormatter
@@ -42,8 +44,12 @@ def startsearch(tool_parameters):
                     "lblock" : lblock.LBlockCipher(),
                     "sparx" : sparx.SPARXCipher(),
                     "sparxround" : sparxround.SPARXRoundCipher(),
-                    "prince" : prince.PrinceCipher()}
-
+                    "fly" : fly.FlyCipher(),
+                    "fly4bit" : fly4bit.Fly4BitCipher(),
+                    "twine" : twine.TwineCipher(),
+                    "noekeon" : noekeon.NoekeonCipher(),
+                    "prince" : prince.PrinceCipher(),
+                    "mantis" : mantis.MantisCipher()}
     cipher = None
 
     if tool_parameters["cipher"] in cipher_suite:

@@ -281,7 +281,6 @@ def add4bitSboxNibbles(sbox, input_word, output_word, weight):
 
     return add4bitSbox(sbox, variables)
 
-#TODO implement correctly
 def add8bitSbox(sbox, variables):
     """
     Adds the constraints for the S-box and the weight
@@ -295,10 +294,10 @@ def add8bitSbox(sbox, variables):
     S(x) = y
 
     The probability of the transitions is
-    2^-{hw(w0||w1||w2||w3)}
+    2^-{hw(w0||w1||w2||w3||w4||w5||w6||w7)}
     """
     assert(len(sbox) == 256)
-    assert(len(variables) == 12)
+    assert(len(variables) == 24)
 
     # First compute the DDT
     DDT = [[0]*256 for i in range(256)]
@@ -315,22 +314,38 @@ def add8bitSbox(sbox, variables):
         for output_diff in range(256):
             if DDT[input_diff][output_diff] != 0:
                 tmp = []
+                tmp.append((input_diff >> 7) & 1)
+                tmp.append((input_diff >> 6) & 1)
+                tmp.append((input_diff >> 5) & 1)
+                tmp.append((input_diff >> 4) & 1)
                 tmp.append((input_diff >> 3) & 1)
                 tmp.append((input_diff >> 2) & 1)
                 tmp.append((input_diff >> 1) & 1)
                 tmp.append((input_diff >> 0) & 1)
+                tmp.append((output_diff >> 7) & 1)
+                tmp.append((output_diff >> 6) & 1)
+                tmp.append((output_diff >> 5) & 1)
+                tmp.append((output_diff >> 4) & 1)
                 tmp.append((output_diff >> 3) & 1)
                 tmp.append((output_diff >> 2) & 1)
                 tmp.append((output_diff >> 1) & 1)
                 tmp.append((output_diff >> 0) & 1)
                 if DDT[input_diff][output_diff] == 2:
-                    tmp += [0, 1, 1, 1] # 2^-3
+                    tmp += [0, 1, 1, 1, 1, 1, 1, 1] # 2^-7
                 elif DDT[input_diff][output_diff] == 4:
-                    tmp += [0, 0, 1, 1] # 2^-2
+                    tmp += [0, 0, 1, 1, 1, 1, 1, 1] # 2^-6
                 elif DDT[input_diff][output_diff] == 8:
-                    tmp += [0, 0, 0, 1] # 2^-1
+                    tmp += [0, 0, 0, 1, 1, 1, 1, 1] # 2^-5
                 elif DDT[input_diff][output_diff] == 16:
-                    tmp += [0, 0, 0, 0]
+                    tmp += [0, 0, 0, 0, 1, 1, 1, 1] # 2^-4
+                elif DDT[input_diff][output_diff] == 32:
+                    tmp += [0, 0, 0, 0, 0, 1, 1, 1] # 2^-3
+                elif DDT[input_diff][output_diff] == 64:
+                    tmp += [0, 0, 0, 0, 0, 0, 1, 1] # 2^-2
+                elif DDT[input_diff][output_diff] == 128:
+                    tmp += [0, 0, 0, 0, 0, 0, 0, 1] # 2^-1
+                elif DDT[input_diff][output_diff] == 256:
+                    tmp += [0, 0, 0, 0, 0, 0, 0, 0] # 2^-0
                 trails.append(tmp)
 
     # Build CNF from invalid trails
@@ -340,7 +355,7 @@ def add8bitSbox(sbox, variables):
         if list(prod) not in trails:
             expr = ["~" if x == 1 else "" for x in list(prod)]
             clause = ""
-            for literal in range(12):
+            for literal in range(24):
                 clause += "{0}{1} | ".format(expr[literal], variables[literal])
 
             cnf += "({}) &".format(clause[:-2])

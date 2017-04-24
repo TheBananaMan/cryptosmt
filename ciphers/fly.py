@@ -104,22 +104,32 @@ class FlyCipher(AbstractCipher):
                     0xd1,0xa3,0xf7,0x45,0x70,0xce,0x1b,0x29,0xbd,0x1c,0xaf,0x52,0x56,0xda,0x88,0x94,
                     0xe2,0x08,0x9c,0xb6,0x5a,0x6d,0x34,0x8f,0x85,0xf0,0xc3,0xeb,0x0e,0xc7,0x49,0x11]
 
-        #TODO add 8 bit Sbox support
-        for i in range(256):
-            variables = ["{0}[{1}:{1}]".format(s_in, 4*i + 3),
-                         "{0}[{1}:{1}]".format(s_in, 4*i + 2),
-                         "{0}[{1}:{1}]".format(s_in, 4*i + 1),
-                         "{0}[{1}:{1}]".format(s_in, 4*i + 0),
-                         "{0}[{1}:{1}]".format(p, 4*i + 3),
-                         "{0}[{1}:{1}]".format(p, 4*i + 2),
-                         "{0}[{1}:{1}]".format(p, 4*i + 1),
-                         "{0}[{1}:{1}]".format(p, 4*i + 0),
-                         "{0}[{1}:{1}]".format(w, 4*i + 3),
-                         "{0}[{1}:{1}]".format(w, 4*i + 2),
-                         "{0}[{1}:{1}]".format(w, 4*i + 1),
-                         "{0}[{1}:{1}]".format(w, 4*i + 0)]
+        for i in range(8):
+            variables = ["{0}[{1}:{1}]".format(s_in, 8*i + 7),
+                         "{0}[{1}:{1}]".format(s_in, 8*i + 6),
+                         "{0}[{1}:{1}]".format(s_in, 8*i + 5),
+                         "{0}[{1}:{1}]".format(s_in, 8*i + 4),
+                         "{0}[{1}:{1}]".format(s_in, 8*i + 3),
+                         "{0}[{1}:{1}]".format(s_in, 8*i + 2),
+                         "{0}[{1}:{1}]".format(s_in, 8*i + 1),
+                         "{0}[{1}:{1}]".format(s_in, 8*i + 0),
+                         "{0}[{1}:{1}]".format(p, 8*i + 7),
+                         "{0}[{1}:{1}]".format(p, 8*i + 6),
+                         "{0}[{1}:{1}]".format(p, 8*i + 5),
+                         "{0}[{1}:{1}]".format(p, 8*i + 4),
+                         "{0}[{1}:{1}]".format(p, 8*i + 3),
+                         "{0}[{1}:{1}]".format(p, 8*i + 2),
+                         "{0}[{1}:{1}]".format(p, 8*i + 1),
+                         "{0}[{1}:{1}]".format(p, 8*i + 0),
+                         "{0}[{1}:{1}]".format(w, 8*i + 7),
+                         "{0}[{1}:{1}]".format(w, 8*i + 6),
+                         "{0}[{1}:{1}]".format(w, 8*i + 5),
+                         "{0}[{1}:{1}]".format(w, 8*i + 4),
+                         "{0}[{1}:{1}]".format(w, 8*i + 3),
+                         "{0}[{1}:{1}]".format(w, 8*i + 2),
+                         "{0}[{1}:{1}]".format(w, 8*i + 1),
+                         "{0}[{1}:{1}]".format(w, 8*i + 0)]
             command += stpcommands.add8bitSbox(fly_sbox, variables)
-
 
         stp_file.write(command)
         return

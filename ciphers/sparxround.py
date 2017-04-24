@@ -23,7 +23,7 @@ class SPARXRoundCipher(AbstractCipher):
         """
         Returns the print format.
         """
-        return ['X0', 'X1', 'Y0', 'Y1', 'w']
+        return ['X0', 'X1', 'Y0', 'Y1', 'X0A', 'X1A', 'Y0A', 'Y1A', 'X0L', 'X1L','w']
 
     def createSTP(self, stp_filename, parameters):
         """
@@ -114,7 +114,7 @@ class SPARXRoundCipher(AbstractCipher):
         command += self.A(y0_in, y1_in, y0_after_A, y1_after_A, w, wordsize)
 
         # every step
-        if rounds % self.rounds_per_step:
+        if (rounds % self.rounds_per_step) == 0:
             command += self.L(x0_after_A, x1_after_A, x0_after_L, x1_after_L)
 
             #Assert(x_out = L(A^a(x_in)) xor A^a(y_in))

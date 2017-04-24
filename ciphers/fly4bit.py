@@ -47,7 +47,7 @@ class Fly4BitCipher(AbstractCipher):
             p = ["P{}".format(i) for i in range(rounds)]
 
             # w = weight
-            w = ["w{}".format(i) for i in range(rounds)]
+            w = ["w{}".format(i) for i in range(3*rounds)]
 
             stpcommands.setupVariables(stp_file, s, wordsize)
             stpcommands.setupVariables(stp_file, sbox1, int(wordsize/2))
@@ -57,7 +57,7 @@ class Fly4BitCipher(AbstractCipher):
             stpcommands.setupWeightComputation(stp_file, weight, w, wordsize)
 
             for i in range(rounds):
-                self.setupFlyRound(stp_file, s[i], p[i], sbox1[i], s[i+1], w[i], wordsize)
+                self.setupFlyRound(stp_file, s[i], p[i], sbox1[i], s[i+1], w[i], w[i+rounds], w[i+(2*rounds)], wordsize)
 
             # No all zero characteristic
             stpcommands.assertNonZero(stp_file, s, wordsize)
@@ -77,7 +77,7 @@ class Fly4BitCipher(AbstractCipher):
 
         return
 
-    def setupFlyRound(self, stp_file, s_in, p, sbox1, s_out, w, wordsize):
+    def setupFlyRound(self, stp_file, s_in, p, sbox1, s_out, w1, w2, w3, wordsize):
         """
         Model for differential behaviour of one round FLY
         """
@@ -89,9 +89,7 @@ class Fly4BitCipher(AbstractCipher):
         for i in range(8):
             hixorlo = "BVXOR({0}[{1}:{2}], {0}[{3}:{4}])".format(s_in, 8*i+3, 8*i+0, 8*i+7, 8*i+4)
 
-            w2 = "BVXOR({0}[{1}:{2}], {0}[{3}:{4}])".format(w, 8*i+3, 8*i+0, 8*i+7, 8*i+4)
             #Sbox 1 - center
-            #TODO calculate weight correct for sbox
             variables = ["{0}[{1}:{1}]".format(hixorlo, 4*i + 3),
                          "{0}[{1}:{1}]".format(hixorlo, 4*i + 2),
                          "{0}[{1}:{1}]".format(hixorlo, 4*i + 1),
@@ -100,15 +98,19 @@ class Fly4BitCipher(AbstractCipher):
                          "{0}[{1}:{1}]".format(sbox1, 4*i + 2),
                          "{0}[{1}:{1}]".format(sbox1, 4*i + 1),
                          "{0}[{1}:{1}]".format(sbox1, 4*i + 0),
-                         "{0}[{1}:{1}]".format(w2, 4*i + 3),
-                         "{0}[{1}:{1}]".format(w2, 4*i + 2),
-                         "{0}[{1}:{1}]".format(w2, 4*i + 1),
-                         "{0}[{1}:{1}]".format(w2, 4*i + 0)]
+                         "{0}[{1}:{1}]".format(w1, 4*i + 3),
+                         "{0}[{1}:{1}]".format(w1, 4*i + 2),
+                         "{0}[{1}:{1}]".format(w1, 4*i + 1),
+                         "{0}[{1}:{1}]".format(w1, 4*i + 0)]
             command += stpcommands.add4bitSbox(fly_sbox, variables)
 
-            sbox2 = "BVXOR({0}[{2}:{3}], {1}[{4}:{5}])".format(s_in, sbox1, 8*i+3, 8*i+0, 4*i + 3, 4*i + 0)
-            sbox3 = "BVXOR({0}[{2}:{3}], {1}[{4}:{5}])".format(s_in, sbox1, 8*i+7, 8*i+4, 4*i + 3, 4*i + 0)
+            #sbox2 = "BVXOR({0}[{2}:{3}], {1}[{4}:{5}])".format(s_in, sbox1, 8*i+3, 8*i+0, 4*i + 3, 4*i + 0)
+            #sbox3 = "BVXOR({0}[{2}:{3}], {1}[{4}:{5}])".format(s_in, sbox1, 8*i+7, 8*i+4, 4*i + 3, 4*i + 0)
 
+            command += "ASSERT({6}[{2}:{3}] = BVXOR({0}[{2}:{3}], {1}[{4}:{5}]));\n".format(s_in, sbox1, 8*i+3, 8*i+0, 4*i + 3, 4*i + 0, p)
+            command += "ASSERT({6}[{2}:{3}] = BVXOR({0}[{2}:{3}], {1}[{4}:{5}]));\n".format(s_in, sbox1, 8*i+7, 8*i+4, 4*i + 3, 4*i + 0, p)
+
+            """
             #Sbox 2 - left
             variables = ["{0}[{1}:{1}]".format(sbox2, 4*i + 3),
                          "{0}[{1}:{1}]".format(sbox2, 4*i + 2),
@@ -118,11 +120,12 @@ class Fly4BitCipher(AbstractCipher):
                          "{0}[{1}:{1}]".format(p, 8*i + 2),
                          "{0}[{1}:{1}]".format(p, 8*i + 1),
                          "{0}[{1}:{1}]".format(p, 8*i + 0),
-                         "{0}[{1}:{1}]".format(w, 8*i + 3),
-                         "{0}[{1}:{1}]".format(w, 8*i + 2),
-                         "{0}[{1}:{1}]".format(w, 8*i + 1),
-                         "{0}[{1}:{1}]".format(w, 8*i + 0)]
+                         "{0}[{1}:{1}]".format(w2, 4*i + 3),
+                         "{0}[{1}:{1}]".format(w2, 4*i + 2),
+                         "{0}[{1}:{1}]".format(w2, 4*i + 1),
+                         "{0}[{1}:{1}]".format(w2, 4*i + 0)]
             command += stpcommands.add4bitSbox(fly_sbox, variables)
+
 
             #Sbox 3 - right
             variables = ["{0}[{1}:{1}]".format(sbox3, 4*i + 3),
@@ -133,11 +136,12 @@ class Fly4BitCipher(AbstractCipher):
                          "{0}[{1}:{1}]".format(p, 8*i + 6),
                          "{0}[{1}:{1}]".format(p, 8*i + 5),
                          "{0}[{1}:{1}]".format(p, 8*i + 4),
-                         "{0}[{1}:{1}]".format(w, 8*i + 7),
-                         "{0}[{1}:{1}]".format(w, 8*i + 6),
-                         "{0}[{1}:{1}]".format(w, 8*i + 5),
-                         "{0}[{1}:{1}]".format(w, 8*i + 4)]
+                         "{0}[{1}:{1}]".format(w3, 4*i + 3),
+                         "{0}[{1}:{1}]".format(w3, 4*i + 2),
+                         "{0}[{1}:{1}]".format(w3, 4*i + 1),
+                         "{0}[{1}:{1}]".format(w3, 4*i + 0)]
             command += stpcommands.add4bitSbox(fly_sbox, variables)
+            """
 
         #Permutation Layer
         #Rot(.) = (i+8*(i mod 8)) mod 64

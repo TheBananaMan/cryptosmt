@@ -44,38 +44,57 @@ class SPARXRoundCipher(AbstractCipher):
             # x0, x1 = left, y0, y1 = right 
             x0 = ["X0{}".format(i) for i in range(rounds + 1)]
             x1 = ["X1{}".format(i) for i in range(rounds + 1)]
+            x0_after_A = ["X0A{}".format(i) for i in range(rounds + 1)]
+            x1_after_A = ["X1A{}".format(i) for i in range(rounds + 1)]
             x0_after_L = ["X0L{}".format(i) for i in range(rounds + 1)]
             x1_after_L = ["X1L{}".format(i) for i in range(rounds + 1)]
             y0 = ["Y0{}".format(i) for i in range(rounds + 1)]
             y1 = ["Y1{}".format(i) for i in range(rounds + 1)]
+            y0_after_A = ["Y0A{}".format(i) for i in range(rounds + 1)]
+            y1_after_A = ["Y1A{}".format(i) for i in range(rounds + 1)]
 
             # w = weight
             w = ["w{}".format(i) for i in range(2*rounds)]
 
             stpcommands.setupVariables(stp_file, x0, wordsize)
             stpcommands.setupVariables(stp_file, x1, wordsize)
+            stpcommands.setupVariables(stp_file, x0_after_A, wordsize)
+            stpcommands.setupVariables(stp_file, x1_after_A, wordsize)
             stpcommands.setupVariables(stp_file, x0_after_L, wordsize)
             stpcommands.setupVariables(stp_file, x1_after_L, wordsize)
             stpcommands.setupVariables(stp_file, y0, wordsize)
             stpcommands.setupVariables(stp_file, y1, wordsize)
+            stpcommands.setupVariables(stp_file, y0_after_A, wordsize)
+            stpcommands.setupVariables(stp_file, y1_after_A, wordsize)
             stpcommands.setupVariables(stp_file, w, wordsize)
 
             stpcommands.setupWeightComputation(stp_file, weight, w, wordsize)
 
             for i in range(rounds):
-                #do round function left (SPECKEY)
-                self.setupSPECKEYRound(stp_file, x0[i], x1[i], x0[i+1], x1[i+1],
-                                       w[i], wordsize)
+                if ((i+1) % self.rounds_per_step) == 0:
+                    #do round function left (SPECKEY)
+                    self.setupSPECKEYRound(stp_file, x0[i], x1[i],
+                                           x0_after_A[i], x1_after_A[i],
+                                           w[i], wordsize)
 
-                #do round function right (SPECKEY)
-                self.setupSPECKEYRound(stp_file, y0[i], y1[i], y0[i+1], y1[i+1],
-                                       w[rounds+i], wordsize)
+                    #do round function right (SPECKEY)
+                    self.setupSPECKEYRound(stp_file, y0[i], y1[i],
+                                           y0_after_A[i], y1_after_A[i],
+                                           w[rounds+i], wordsize)
 
-                if (rounds % self.rounds_per_step) == 0:
                     #every step do L-box and feistel
-                    self.setupSPARXRound(stp_file, x0[i], x1[i], y0[i], y1[i],
-                                     x0_after_L[i], x1_after_L[i],
-                                     x0[i+1], x1[i+1], y0[i+1], y1[i+1])
+                    self.setupSPARXRound(stp_file, x0_after_A[i], x1_after_A[i],
+                                         y0_after_A[i], y1_after_A[i],
+                                         x0_after_L[i], x1_after_L[i],
+                                         x0[i+1], x1[i+1], y0[i+1], y1[i+1])
+                else:
+                    #do round function left (SPECKEY)
+                    self.setupSPECKEYRound(stp_file, x0[i], x1[i], x0[i+1], x1[i+1],
+                                           w[i], wordsize)
+
+                    #do round function right (SPECKEY)
+                    self.setupSPECKEYRound(stp_file, y0[i], y1[i], y0[i+1], y1[i+1],
+                                           w[rounds+i], wordsize)
 
             # No all zero characteristic
             stpcommands.assertNonZero(stp_file, x0+x1+y0+y1, wordsize)

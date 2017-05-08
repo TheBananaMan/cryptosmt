@@ -23,7 +23,7 @@ class SPARXRoundCipher(AbstractCipher):
         """
         Returns the print format.
         """
-        return ['X0', 'X1', 'Y0', 'Y1','X0L', 'X1L','w']
+        return ['X0', 'X1', 'Y0', 'Y1','X0L', 'X1L','wl','wr']
 
     def createSTP(self, stp_filename, parameters):
         """
@@ -41,7 +41,7 @@ class SPARXRoundCipher(AbstractCipher):
             stp_file.write(header)
 
             # Setup variables
-            # x0, x1 = left, y0, y1 = right 
+            # x0, x1 = left, y0, y1 = right
             x0 = ["X0{}".format(i) for i in range(rounds + 1)]
             x1 = ["X1{}".format(i) for i in range(rounds + 1)]
             x0_after_A = ["X0A{}".format(i) for i in range(rounds + 1)]
@@ -54,7 +54,8 @@ class SPARXRoundCipher(AbstractCipher):
             y1_after_A = ["Y1A{}".format(i) for i in range(rounds + 1)]
 
             # w = weight
-            w = ["w{}".format(i) for i in range(2*rounds)]
+            wleft = ["wl{}".format(i) for i in range(rounds)]
+            wright = ["wr{}".format(i) for i in range(rounds)]
 
             stpcommands.setupVariables(stp_file, x0, wordsize)
             stpcommands.setupVariables(stp_file, x1, wordsize)
@@ -66,21 +67,22 @@ class SPARXRoundCipher(AbstractCipher):
             stpcommands.setupVariables(stp_file, y1, wordsize)
             stpcommands.setupVariables(stp_file, y0_after_A, wordsize)
             stpcommands.setupVariables(stp_file, y1_after_A, wordsize)
-            stpcommands.setupVariables(stp_file, w, wordsize)
+            stpcommands.setupVariables(stp_file, wleft, wordsize)
+            stpcommands.setupVariables(stp_file, wright, wordsize)
 
-            stpcommands.setupWeightComputation(stp_file, weight, w, wordsize)
+            stpcommands.setupWeightComputation(stp_file, weight, wleft + wright, wordsize)
 
             for i in range(rounds):
                 if ((i+1) % self.rounds_per_step) == 0:
                     #do round function left (SPECKEY)
                     self.setupSPECKEYRound(stp_file, x0[i], x1[i],
                                            x0_after_A[i], x1_after_A[i],
-                                           w[i], wordsize)
+                                           wleft[i], wordsize)
 
                     #do round function right (SPECKEY)
                     self.setupSPECKEYRound(stp_file, y0[i], y1[i],
                                            y0_after_A[i], y1_after_A[i],
-                                           w[rounds+i], wordsize)
+                                           wright[i], wordsize)
 
                     #every step do L-box and feistel
                     self.setupSPARXRound(stp_file, x0_after_A[i], x1_after_A[i],
@@ -90,11 +92,11 @@ class SPARXRoundCipher(AbstractCipher):
                 else:
                     #do round function left (SPECKEY)
                     self.setupSPECKEYRound(stp_file, x0[i], x1[i], x0[i+1], x1[i+1],
-                                           w[i], wordsize)
+                                           wleft[i], wordsize)
 
                     #do round function right (SPECKEY)
                     self.setupSPECKEYRound(stp_file, y0[i], y1[i], y0[i+1], y1[i+1],
-                                           w[rounds+i], wordsize)
+                                           wright[i], wordsize)
 
             # No all zero characteristic
             stpcommands.assertNonZero(stp_file, x0+x1+y0+y1, wordsize)
@@ -144,7 +146,7 @@ class SPARXRoundCipher(AbstractCipher):
 
     def setupSPECKEYRound(self, stp_file, x_in, y_in, x_out, y_out, w, wordsize):
         """
-        Model for the ARX box (round) function of SPARX which is the 
+        Model for the ARX box (round) function of SPARX which is the
         same as SPECKEY.
         """
         command = ""
@@ -172,7 +174,7 @@ class SPARXRoundCipher(AbstractCipher):
 
     def L(self, x_in, y_in, x_out, y_out):
         """
-        Model for the L function in SPARX. L is the Feistel function and 
+        Model for the L function in SPARX. L is the Feistel function and
         is borrowed from NOEKEON.
         """
         command = ""
@@ -191,5 +193,3 @@ class SPARXRoundCipher(AbstractCipher):
         command += "BVXOR(" + y_in + " , " + rot_x_y + "));\n"
 
         return command
-
-

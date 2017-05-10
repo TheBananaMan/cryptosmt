@@ -1,11 +1,11 @@
 # Example input file for Midori64 - 11 rounds to find all characteristics 
 ---
 cipher: midori
-sweight: x
+sweight: 114
 rounds: 11
 wordsize: 64
 mode: 4
 fixedVariables:
-- SB0: "TODO"
-- SB11: "TODO"
+- SB0: "0x0000A00000500500"
+- SB11: "0xAAA0AAA50AAAAA0A"
 ...

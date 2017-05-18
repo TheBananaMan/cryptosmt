@@ -1,7 +1,7 @@
 # Example input file for Noekeon128 - 12 rounds to find all characteristics 
 ---
 cipher: noekeon
-sweight: 70
+sweight: todo
 rounds: 12
 wordsize: 32
 mode: 4

@@ -272,6 +272,12 @@ def findAllCharacteristics(cipher, parameters):
         
     return
 
+def findOptimalCharacteristic(cipher, parameters):
+    # use findcharacteristic to find all characteristics
+    # iterate over all characteristics and calculate the probability of the differentials
+    # return differential with optimal characteristic
+    return
+
 def searchCharacteristics(cipher, parameters):
     """
     Searches for differential characteristics of minimal weight
@@ -283,7 +289,10 @@ def searchCharacteristics(cipher, parameters):
         parameters["sweight"] = findMinWeightCharacteristic(cipher, parameters)
         print("Rounds:")
         sys.stdout.flush()
-        parameters["rounds"] = parameters["rounds"] + 1
+        if cipher.name == "prince" or cipher.name == "mantis" or cipher.name == "qarma":
+            parameters["rounds"] = parameters["rounds"] + 2
+        else:
+            parameters["rounds"] = parameters["rounds"] + 1
     return
 
 def reachedTimelimit(start_time, timelimit):

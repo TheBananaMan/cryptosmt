@@ -1,0 +1,13 @@
+# Example input file for SPECK64 - 3 rounds to find all characteristics 
+---
+cipher: speck
+sweight: 3
+rounds: 3
+wordsize: 32
+mode: 4
+fixedVariables:
+- x0: "0x00000010"
+- y0: "0x10000000"
+- x3: "0x80800004"
+- y3: "0x80800020"
+...

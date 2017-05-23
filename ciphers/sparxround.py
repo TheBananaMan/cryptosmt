@@ -70,7 +70,8 @@ class SPARXRoundCipher(AbstractCipher):
             stpcommands.setupVariables(stp_file, wleft, wordsize)
             stpcommands.setupVariables(stp_file, wright, wordsize)
 
-            stpcommands.setupWeightComputation(stp_file, weight, wleft + wright, wordsize)
+            # Ignore MSB
+            stpcommands.setupWeightComputation(stp_file, weight, wleft + wright, wordsize, 1)
 
             for i in range(rounds):
                 if ((i+1) % self.rounds_per_step) == 0:

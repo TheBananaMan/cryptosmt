@@ -38,7 +38,7 @@ class DifferentialCharacteristic(object):
             for word in self.print_format:
                 try:
                     # Add word to table
-                    if word == 'w' or word == 'wr' or word == 'wl':
+                    if word == 'w' or word == 'wr' or word == 'wl' or word == 'wx0' or word == 'wx1' or word == 'wx2' or word == 'wx3':
                         weight = self.characteristic_data[word+str(rnd)]
                         # Print hw(weight) or weight depending on the cipher
                         if self.cipher.name == "keccakdiff" or \

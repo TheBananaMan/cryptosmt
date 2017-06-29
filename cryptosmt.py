@@ -10,7 +10,7 @@ from ciphers import (simon, speck, simonlinear, keccak, keccakdiff,
                      ketje, ascon, salsa, chacha, skinny, present,
                      midori, lblock, sparx, sparxround, fly, fly4bit,
                      twine, noekeon, prince, mantis, sparxround128,
-                     speckey)
+                     speckey, gift)
 
 from config import PATH_STP, PATH_CRYPTOMINISAT, PATH_BOOLECTOR
 
@@ -52,7 +52,8 @@ def startsearch(tool_parameters):
                     "noekeon" : noekeon.NoekeonCipher(),
                     "prince" : prince.PrinceCipher(),
                     "mantis" : mantis.MantisCipher(),
-                    "speckey" : speckey.SpeckeyCipher()}
+                    "speckey" : speckey.SpeckeyCipher(),
+                    "gift" : gift.GiftCipher()}
     cipher = None
 
     if tool_parameters["cipher"] in cipher_suite:

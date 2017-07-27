@@ -72,7 +72,7 @@ class GiftCipher(AbstractCipher):
 
         return
 
-    def setupGiftRound(self, stp_file, s_in, s_out, p, w, wordsize):
+    def setupGiftRound(self, stp_file, s_in, p, s_out, w, wordsize):
         """
         Model for differential behaviour of one round GIFT
         """

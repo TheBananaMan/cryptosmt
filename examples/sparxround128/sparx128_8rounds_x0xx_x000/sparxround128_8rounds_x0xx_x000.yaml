@@ -1,7 +1,7 @@
 # Example input file for SPARX128 - 8 rounds to find all characteristics 
 ---
 cipher: sparxround128
-sweight: 42
+sweight: 55
 rounds: 8
 wordsize: 16
 mode: 2

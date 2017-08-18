@@ -1,30 +1,42 @@
 '''
-Created on Dec 18, 2016
+Created on Aug 18, 2017
 
-@author: stefan
+@author: ralph, kste
 '''
 
 from parser import stpcommands
 from ciphers.cipher import AbstractCipher
 
 
-class SkinnyCipher(AbstractCipher):
+class QarmaCipher(AbstractCipher):
     """
-    Represents the differential behaviour of Skinny and can be used
+    Represents the differential behaviour of Qarma and can be used
     to find differential characteristics for the given parameters.
     """
 
-    name = "skinny"
+    name = "qarma"
+
+    #Sboxes
+    #default sbox = sigma1
+    #qarma sigma0 = [0x0, 0xE, 0x2, 0xA, 0x9, 0xF, 0x8, 0xB, 0x6, 0x4, 0x3, 0x7, 0xD, 0xC, 0x1, 0x5]
+    #qarma sigma1 = [0xA, 0xD. 0xE, 0x6, 0xF, 0x7, 0x3, 0x5, 0x9, 0x8, 0x0, 0xC, 0xB, 0x1, 0x2, 0x4]
+    #qarma sigma2 = [0xB, 0x6, 0x8, 0xF, 0xC, 0x0, 0x9, 0xE, 0x3, 0x7, 0x4, 0x5, 0xD, 0x2, 0x1, 0xA]
+    #qarma sigma2_inv = [0x5, 0xE, 0xD, 0x8, 0xA, 0xB, 0x1, 0x9, 0x2, 0x6, 0xF, 0x0, 0x4, 0xC, 0x7, 0x3]
+
+
 
     def getFormatString(self):
         """
         Returns the print format.
         """
-        return ['SC', 'SR', 'MC', 'w']
+        sb = ['SB{}r'.format(i) for i in range(16)]
+        sr = ['SR{}r'.format(i) for i in range(16)]
+        mc = ['MC{}r'.format(i) for i in range(16)]
+        return sb + sr + mc
 
     def createSTP(self, stp_filename, parameters):
         """
-        Creates an STP file to find a characteristic for SIMON with
+        Creates an STP file to find a characteristic for Qarma with
         the given parameters.
         """
 
@@ -32,41 +44,69 @@ class SkinnyCipher(AbstractCipher):
         rounds = parameters["rounds"]
         weight = parameters["sweight"]
 
-        if wordsize != 64:
-            print("Only wordsize of 64-bit supported.")
+        if wordsize != 4:
+            print("Qarma only supports a wordsize of 4 bits.")
+            exit(1)
+
+        if (rounds - 1) % 2 != 0:
+            print("Qarma only supports a multiple of 2 as the number of rounds.")
             exit(1)
 
         with open(stp_filename, 'w') as stp_file:
-            header = ("% Input File for STP\n% Skinny w={}"
+            header = ("% Input File for STP\n% Qarma w={}"
                       "rounds={}\n\n\n".format(wordsize, rounds))
             stp_file.write(header)
 
             # Setup variables
-            sc = ["SC{}".format(i) for i in range(rounds + 1)]
-            sr = ["SR{}".format(i) for i in range(rounds)]
-            mc = ["MC{}".format(i) for i in range(rounds)]
+            # State is represented as nibbles
+            # 0 4  8 12
+            # 1 5  9 13
+            # 2 6 10 14
+            # 3 7 11 15
 
-            # w = weight
-            w = ["w{}".format(i) for i in range(rounds)]
+            sb = ["SB{}r{}".format(j, i) for i in range(rounds + 1) for j in range(16)]
+            sr = ["SR{}r{}".format(j, i) for i in range(rounds) for j in range(16)]
+            mc = ["MC{}r{}".format(j, i) for i in range(rounds) for j in range(16)]
 
-            stpcommands.setupVariables(stp_file, sc, wordsize)
+            # wn = weight of each S-box
+            wn = ["wn{}r{}".format(j, i) for i in range(rounds + 1) for j in range(16)]  # One Extra for middle round
+
+            stpcommands.setupVariables(stp_file, sb, wordsize)
             stpcommands.setupVariables(stp_file, sr, wordsize)
             stpcommands.setupVariables(stp_file, mc, wordsize)
-            stpcommands.setupVariables(stp_file, w, wordsize)
+            stpcommands.setupVariables(stp_file, wn, wordsize)
 
-            stpcommands.setupWeightComputation(stp_file, weight, w, wordsize)
+            stpcommands.setupWeightComputation(stp_file, weight, wn, wordsize)
 
-            for i in range(rounds):
-                self.setupSkinnyRound(stp_file, sc[i], sr[i], mc[i], sc[i+1], 
-                                      w[i], wordsize)
+            # Forward rounds
+            for rnd in range(rounds // 2):
+                si = 16*rnd
+                ei = 16*(rnd + 1)
+                self.setupQarmaForwardRound(stp_file, sb[si:ei], sr[si:ei], mc[si:ei],
+                                             sb[ei:ei + 16], wn[si:ei], wordsize)
+
+            # Middle round
+            si = 16*(rounds // 2)
+            ei = 16*((rounds // 2) + 1)
+            self.setupQarmaMiddleRound(stp_file, sb[si:ei], sr[si:ei], mc[si:ei],
+                                        sb[ei:ei + 16], wn[si:ei], wn[ei:ei + 16],
+                                        wordsize)
+
+            # Backward round
+            for rnd in range(rounds // 2 + 1, rounds):
+                si = 16*rnd
+                ei = 16*(rnd + 1)
+                self.setupQarmaBackwardRound(stp_file, sb[si:ei], sr[si:ei], mc[si:ei],
+                                              sb[ei:ei + 16], wn[si + 16:ei + 16], wordsize)
+
 
             # No all zero characteristic
-            stpcommands.assertNonZero(stp_file, sc, wordsize)
+            stpcommands.assertNonZero(stp_file, sb, wordsize)
 
             # Iterative characteristics only
             # Input difference = Output difference
             if parameters["iterative"]:
-                stpcommands.assertVariableValue(stp_file, sc[0], sc[rounds])
+                stpcommands.assertVariableValue(stp_file, sb[0], sb[rounds])
 
             for key, value in parameters["fixedVariables"].items():
                 stpcommands.assertVariableValue(stp_file, key, value)
@@ -78,62 +118,205 @@ class SkinnyCipher(AbstractCipher):
 
         return
 
-    def setupSkinnyRound(self, stp_file, sc_in, sr, mc, sc_out, w, wordsize):
+    def setupQarmaForwardRound(self, stp_file, sb_in, sr, mc, sb_out, wn, wordsize):
         """
-        Model for differential behaviour of one round Skinny
+        Model for differential behaviour of one forward round Qarma.
         """
         command = ""
-        #Add S-box transitions
-        #for i in range(16):
-        #    command += self.addSbox(sc_in, sr, 4*i)
 
-        #ShiftRows
-        command += "ASSERT({}[15:0] = {}[15:0]);\n".format(sr, mc)
+        # Shuffle Cells - Midori cell permutation
+        # 0 4 8 c       0 e 9 7
+        # 1 5 9 d       a 4 3 d
+        # 2 6 a e       5 b c 2
+        # 3 7 b f       f 1 6 8
+        permutation = [0x0, 0xa, 0x5, 0xf, 0xe, 0x4, 0xb, 0x1,
+                       0x9, 0x3, 0xc, 0x6, 0x7, 0xd, 0x2, 0x8]
 
-        command += "ASSERT({}[27:16] = {}[31:20]);\n".format(sr, mc)
-        command += "ASSERT({}[31:28] = {}[19:16]);\n".format(sr, mc)
+        for nibble in range(16):
+            command += "ASSERT({} = {});\n".format(sr[nibble], mc[permutation[nibble]])
 
-        command += "ASSERT({}[39:32] = {}[47:40]);\n".format(sr, mc)
-        command += "ASSERT({}[47:40] = {}[39:32]);\n".format(sr, mc)
+        # MixColumns
+        # M4,2 = Q4,2 = [0, 1, 2, 1,
+        #                1, 0, 1, 2,
+        #                2, 1, 0, 1,
+        #                1, 2, 1, 0]
 
-        command += "ASSERT({}[51:48] = {}[63:60]);\n".format(sr, mc)
-        command += "ASSERT({}[63:52] = {}[59:48]);\n".format(sr, mc)                
+        # 0 1 1 1       x0      x1 + x2 + x3
+        # 1 0 1 1       x1  ->  x0 + x2 + x3
+        # 1 1 0 1       x2      x0 + x1 + x3
+        # 1 1 1 0       x3      x0 + x1 + x2
 
-        #MixColumns
-        command += "ASSERT("
-        command += "{0}[15:0] = {1}[31:16]".format(mc, sc_out);
-        command += ");\n"
+        #for col in range(4):
+        #    for bit in range(4):
+        #        offset0 = col*16 + 0 + bit
+        #        offset1 = col*16 + 4 + bit
+        #        offset2 = col*16 + 8 + bit
+        #        offset3 = col*16 + 12 + bit
 
-        command += "ASSERT("
-        command += "BVXOR({0}[31:16], {0}[47:32]) = {1}[47:32]".format(mc, sc_out);
-        command += ");\n"
+        #        command += "ASSERT(BVXOR(BVXOR({4}[{1}:{1}], {4}[{2}:{2}]), {4}[{3}:{3}]) \
+        #                     = {5}[{0}:{0}]);\n".format(offset0, offset1, offset2, offset3, mc, sb_out)
+        #        command += "ASSERT(BVXOR(BVXOR({4}[{0}:{0}], {4}[{2}:{2}]), {4}[{3}:{3}]) \
+        #                     = {5}[{1}:{1}]);\n".format(offset0, offset1, offset2, offset3, mc, sb_out)
+        #        command += "ASSERT(BVXOR(BVXOR({4}[{0}:{0}], {4}[{1}:{1}]), {4}[{3}:{3}]) \
+        #                     = {5}[{2}:{2}]);\n".format(offset0, offset1, offset2, offset3, mc, sb_out)
+        #        command += "ASSERT(BVXOR(BVXOR({4}[{0}:{0}], {4}[{1}:{1}]), {4}[{2}:{2}]) \
+        #                     = {5}[{3}:{3}]);\n".format(offset0, offset1, offset2, offset3, mc, sb_out)
 
-        command += "ASSERT("
-        command += "BVXOR({0}[47:32], {0}[15:0]) = {1}[63:48]".format(mc, sc_out);
-        command += ");\n"
+        # SubCells
+        # Sboxes
+        # default sbox = sigma1
+        # qarma sigma0 = [0x0, 0xE, 0x2, 0xA, 0x9, 0xF, 0x8, 0xB, 0x6, 0x4, 0x3, 0x7, 0xD, 0xC, 0x1, 0x5]
+        # qarma sigma1 = [0xA, 0xD. 0xE, 0x6, 0xF, 0x7, 0x3, 0x5, 0x9, 0x8, 0x0, 0xC, 0xB, 0x1, 0x2, 0x4]
+        # qarma sigma2 = [0xB, 0x6, 0x8, 0xF, 0xC, 0x0, 0x9, 0xE, 0x3, 0x7, 0x4, 0x5, 0xD, 0x2, 0x1, 0xA]
+        # qarma sigma2_inv = [0x5, 0xE, 0xD, 0x8, 0xA, 0xB, 0x1, 0x9, 0x2, 0x6, 0xF, 0x0, 0x4, 0xC, 0x7, 0x3]
+        qarma_sbox_sigma_1 = [0xA, 0xD. 0xE, 0x6, 0xF, 0x7, 0x3, 0x5, 0x9, 0x8, 0x0, 0xC, 0xB, 0x1, 0x2, 0x4]
 
-        command += "ASSERT("
-        command += "BVXOR({0}[63:48], {1}[63:48]) = {1}[15:0]".format(mc, sc_out);
-        command += ");\n"
+        for sbox in range(16):
+            command += stpcommands.add4bitSboxNibbles(qarama_sbox_sigma_1, sb_in[sbox], sr[sbox], wn[sbox])
 
-        # TODO: correctly compute weight
-        # For now just take the Hamming weight
-        skinny_sbox = [0xc, 6, 9, 0, 1, 0xa, 2, 0xb, 3, 8, 5, 0xd, 4, 0xe, 7, 0xf]
-        for i in range(16):
-            variables = ["{0}[{1}:{1}]".format(sc_in, 4*i + 3),
-                         "{0}[{1}:{1}]".format(sc_in, 4*i + 2),
-                         "{0}[{1}:{1}]".format(sc_in, 4*i + 1),
-                         "{0}[{1}:{1}]".format(sc_in, 4*i + 0),
-                         "{0}[{1}:{1}]".format(sr, 4*i + 3),
-                         "{0}[{1}:{1}]".format(sr, 4*i + 2),
-                         "{0}[{1}:{1}]".format(sr, 4*i + 1),
-                         "{0}[{1}:{1}]".format(sr, 4*i + 0),
-                         "{0}[{1}:{1}]".format(w, 4*i + 3),
-                         "{0}[{1}:{1}]".format(w, 4*i + 2),
-                         "{0}[{1}:{1}]".format(w, 4*i + 1),
-                         "{0}[{1}:{1}]".format(w, 4*i + 0)]
-            command += stpcommands.add4bitSbox(skinny_sbox, variables)
 
+        stp_file.write(command)
+        return
+
+    def setupQarmaMiddleRound(self, stp_file, sb_in, m_in, m_out, sb_out, wn, wn2, wordsize):
+        """
+        Middle round of Qarma.
+        """
+
+        command = ""
+
+        # 1 forward round
+        self.setupQarmaForwardRound(stp_file, sb[si:ei], sr[si:ei], mc[si:ei],
+                                             sb[ei:ei + 16], wn[si:ei], wordsize)
+
+        # Shuffle Cells - Midori cell permutation
+        # 0 4 8 c       0 e 9 7
+        # 1 5 9 d       a 4 3 d
+        # 2 6 a e       5 b c 2
+        # 3 7 b f       f 1 6 8
+        permutation = [0x0, 0xa, 0x5, 0xf, 0xe, 0x4, 0xb, 0x1,
+                       0x9, 0x3, 0xc, 0x6, 0x7, 0xd, 0x2, 0x8]
+
+        for nibble in range(16):
+            command += "ASSERT({} = {});\n".format(sr[nibble], mc[permutation[nibble]])
+
+        # MixColumns
+        # M4,2 = Q4,2 = [0, 1, 2, 1,
+        #                1, 0, 1, 2,
+        #                2, 1, 0, 1,
+        #                1, 2, 1, 0]
+
+        #TODO
+        #for col in range(4):
+        #    xorsum = stpcommands.getStringXORn(mc[4*col:(4*(col + 1))])  # Get One column
+        #    for row in range(4):
+        #        command += "ASSERT({} = BVXOR({}, {}));\n".format(sb_out[4*col + row],
+        #                                                          sr[4*col + row],
+        #                                                          xorsum)
+
+        # ShuffleCells inverse - Midori cell permutation
+        # 0 4 8 c       0 5 f a
+        # 1 5 9 d       7 2 8 d
+        # 2 6 a e       e b 1 4
+        # 3 7 b f       9 c 6 3
+        permutation_inv = [0x0, 0x7, 0xe, 0x9, 0x5, 0x2, 0xb, 0xc,
+                       0xf, 0x8, 0x1, 0x6, 0xa, 0xd, 0x4, 0x3]
+
+        for nibble in range(16):
+            command += "ASSERT({} = {});\n".format(sr[nibble], mc[permutation_inv[nibble]])
+
+
+        # 1 backward round
+        self.setupQarmaBackwardRound(stp_file, sb[si:ei], sr[si:ei], mc[si:ei],
+                                     sb[ei:ei + 16], wn[si + 16:ei + 16], wordsize)
+
+        stp_file.write(command)
+        return
+
+    def setupQarmaBackwardRound(self, stp_file, sb_in, sr, mc, sb_out, wn, wordsize):
+        """
+        Model for differential behaviour of one backward round Qarma.
+        """
+        command = ""
+
+        # SubCells
+        # Sboxes
+        # default sbox = sigma1
+        # qarma sigma0 = [0x0, 0xE, 0x2, 0xA, 0x9, 0xF, 0x8, 0xB, 0x6, 0x4, 0x3, 0x7, 0xD, 0xC, 0x1, 0x5]
+        # qarma sigma1 = [0xA, 0xD. 0xE, 0x6, 0xF, 0x7, 0x3, 0x5, 0x9, 0x8, 0x0, 0xC, 0xB, 0x1, 0x2, 0x4]
+        # qarma sigma2 = [0xB, 0x6, 0x8, 0xF, 0xC, 0x0, 0x9, 0xE, 0x3, 0x7, 0x4, 0x5, 0xD, 0x2, 0x1, 0xA]
+        # qarma sigma2_inv = [0x5, 0xE, 0xD, 0x8, 0xA, 0xB, 0x1, 0x9, 0x2, 0x6, 0xF, 0x0, 0x4, 0xC, 0x7, 0x3]
+        qarma_sbox_sigma_1 = [0xA, 0xD. 0xE, 0x6, 0xF, 0x7, 0x3, 0x5, 0x9, 0x8, 0x0, 0xC, 0xB, 0x1, 0x2, 0x4]
+
+        for sbox in range(16):
+            command += stpcommands.add4bitSboxNibbles(qarama_sbox_sigma_1, sb_in[sbox], sr[sbox], wn[sbox])
+
+        # MixColumns
+        # M4,2 = Q4,2 = [0, 1, 2, 1,
+        #                1, 0, 1, 2,
+        #                2, 1, 0, 1,
+        #                1, 2, 1, 0]
+
+        #TODO
+        #for col in range(4):
+        #    xorsum = stpcommands.getStringXORn(sb_in[4*col:(4*(col + 1))])  # Get One column
+        #    for row in range(4):
+        #        command += "ASSERT({} = BVXOR({}, {}));\n".format(sr[4*col + row],
+        #                                                          sb_in[4*col + row],
+        #                                                          xorsum)
+
+        # ShuffleCells inverse - Midori cell permutation
+        # 0 4 8 c       0 5 f a
+        # 1 5 9 d       7 2 8 d
+        # 2 6 a e       e b 1 4
+        # 3 7 b f       9 c 6 3
+        permutation = [0x0, 0x7, 0xe, 0x9, 0x5, 0x2, 0xb, 0xc,
+                       0xf, 0x8, 0x1, 0x6, 0xa, 0xd, 0x4, 0x3]
+
+        for nibble in range(16):
+            command += "ASSERT({} = {});\n".format(sr[nibble], mc[permutation[nibble]])
+
+        stp_file.write(command)
+        return
+
+    def setupQarmaFirstForwardRound(self, stp_file, sb_in, sr, mc, sb_out, wn, wordsize):
+        """
+        Model for differential behaviour of the first forward round Qarma.
+        """
+        command = ""
+
+        # SubCells
+        # Sboxes
+        # default sbox = sigma1
+        # qarma sigma0 = [0x0, 0xE, 0x2, 0xA, 0x9, 0xF, 0x8, 0xB, 0x6, 0x4, 0x3, 0x7, 0xD, 0xC, 0x1, 0x5]
+        # qarma sigma1 = [0xA, 0xD. 0xE, 0x6, 0xF, 0x7, 0x3, 0x5, 0x9, 0x8, 0x0, 0xC, 0xB, 0x1, 0x2, 0x4]
+        # qarma sigma2 = [0xB, 0x6, 0x8, 0xF, 0xC, 0x0, 0x9, 0xE, 0x3, 0x7, 0x4, 0x5, 0xD, 0x2, 0x1, 0xA]
+        # qarma sigma2_inv = [0x5, 0xE, 0xD, 0x8, 0xA, 0xB, 0x1, 0x9, 0x2, 0x6, 0xF, 0x0, 0x4, 0xC, 0x7, 0x3]
+        qarma_sbox_sigma_1 = [0xA, 0xD. 0xE, 0x6, 0xF, 0x7, 0x3, 0x5, 0x9, 0x8, 0x0, 0xC, 0xB, 0x1, 0x2, 0x4]
+
+        for sbox in range(16):
+            command += stpcommands.add4bitSboxNibbles(qarama_sbox_sigma_1, sb_in[sbox], sr[sbox], wn[sbox])
+
+        stp_file.write(command)
+        return
+
+    def setupQarmaLastBackwardRound(self, stp_file, sb_in, sr, mc, sb_out, wn, wordsize):
+        """
+        Model for differential behaviour of the last backward round Qarma.
+        """
+        command = ""
+
+        # SubCells
+        # Sboxes
+        # default sbox = sigma1
+        # qarma sigma0 = [0x0, 0xE, 0x2, 0xA, 0x9, 0xF, 0x8, 0xB, 0x6, 0x4, 0x3, 0x7, 0xD, 0xC, 0x1, 0x5]
+        # qarma sigma1 = [0xA, 0xD. 0xE, 0x6, 0xF, 0x7, 0x3, 0x5, 0x9, 0x8, 0x0, 0xC, 0xB, 0x1, 0x2, 0x4]
+        # qarma sigma2 = [0xB, 0x6, 0x8, 0xF, 0xC, 0x0, 0x9, 0xE, 0x3, 0x7, 0x4, 0x5, 0xD, 0x2, 0x1, 0xA]
+        # qarma sigma2_inv = [0x5, 0xE, 0xD, 0x8, 0xA, 0xB, 0x1, 0x9, 0x2, 0x6, 0xF, 0x0, 0x4, 0xC, 0x7, 0x3]
+        qarma_sbox_sigma_1 = [0xA, 0xD. 0xE, 0x6, 0xF, 0x7, 0x3, 0x5, 0x9, 0x8, 0x0, 0xC, 0xB, 0x1, 0x2, 0x4]
+
+        for sbox in range(16):
+            command += stpcommands.add4bitSboxNibbles(qarama_sbox_sigma_1, sb_in[sbox], sr[sbox], wn[sbox])
 
         stp_file.write(command)
         return

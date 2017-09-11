@@ -90,16 +90,16 @@ class SkinnyCipher(AbstractCipher):
         #    command += self.addSbox(sc_in, sr, 4*i)
 
         #ShiftRows
-        command += "ASSERT({}[15:0] = {}[15:0]);\n".format(sr, mc)
+        command += "ASSERT({0}[15:0] = {1}[15:0]);\n".format(sr, mc)
 
-        command += "ASSERT({}[27:16] = {}[31:20]);\n".format(sr, mc)
-        command += "ASSERT({}[31:28] = {}[19:16]);\n".format(sr, mc)
+        command += "ASSERT({0}[31:20] = {1}[27:16]);\n".format(sr, mc)
+        command += "ASSERT({0}[19:16] = {1}[31:28]);\n".format(sr, mc)
 
-        command += "ASSERT({}[39:32] = {}[47:40]);\n".format(sr, mc)
-        command += "ASSERT({}[47:40] = {}[39:32]);\n".format(sr, mc)
+        command += "ASSERT({0}[39:32] = {1}[47:40]);\n".format(sr, mc)
+        command += "ASSERT({0}[47:40] = {1}[39:32]);\n".format(sr, mc)
 
-        command += "ASSERT({}[51:48] = {}[63:60]);\n".format(sr, mc)
-        command += "ASSERT({}[63:52] = {}[59:48]);\n".format(sr, mc)                
+        command += "ASSERT({0}[63:60] = {1}[51:48]);\n".format(sr, mc)
+        command += "ASSERT({0}[59:48] = {1}[63:52]);\n".format(sr, mc)
 
         #MixColumns
         command += "ASSERT("

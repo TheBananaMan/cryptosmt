@@ -1,4 +1,4 @@
-# Example input file for PRESENT64 - 17 rounds to find all characteristics 
+# Example input file for PRESENT64 - 18 rounds to find all characteristics 
 ---
 cipher: present
 sweight: 78

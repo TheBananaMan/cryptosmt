@@ -46,7 +46,7 @@ class TwineCipher(AbstractCipher):
             w = ["w{}".format(i) for i in range(rounds)]
 
             stpcommands.setupVariables(stp_file, x, wordsize)
-            stpcommands.setupVariables(stp_file, s, wordsize)
+            stpcommands.setupVariables(stp_file, s, wordsize // 2)
             stpcommands.setupVariables(stp_file, p, wordsize)
             stpcommands.setupVariables(stp_file, w, wordsize)
 
@@ -87,17 +87,17 @@ class TwineCipher(AbstractCipher):
                          "{0}[{1}:{1}]".format(x_in, 8*i + 2),
                          "{0}[{1}:{1}]".format(x_in, 8*i + 1),
                          "{0}[{1}:{1}]".format(x_in, 8*i + 0),
-                         "{0}[{1}:{1}]".format(s, 8*i + 3),
-                         "{0}[{1}:{1}]".format(s, 8*i + 2),
-                         "{0}[{1}:{1}]".format(s, 8*i + 1),
-                         "{0}[{1}:{1}]".format(s, 8*i + 0),
+                         "{0}[{1}:{1}]".format(s, 4*i + 3),
+                         "{0}[{1}:{1}]".format(s, 4*i + 2),
+                         "{0}[{1}:{1}]".format(s, 4*i + 1),
+                         "{0}[{1}:{1}]".format(s, 4*i + 0),
                          "{0}[{1}:{1}]".format(w, 8*i + 3),
                          "{0}[{1}:{1}]".format(w, 8*i + 2),
                          "{0}[{1}:{1}]".format(w, 8*i + 1),
                          "{0}[{1}:{1}]".format(w, 8*i + 0)]
             command += stpcommands.add4bitSbox(twine_sbox, variables)
 
-        #Feistel structur
+        #Feistel structure
         command += "ASSERT({0}[3:0] = {1}[3:0]);\n".format(x_in, p)
         command += "ASSERT({0}[11:8] = {1}[11:8]);\n".format(x_in, p)
         command += "ASSERT({0}[19:16] = {1}[19:16]);\n".format(x_in, p)
@@ -108,13 +108,13 @@ class TwineCipher(AbstractCipher):
         command += "ASSERT({0}[59:56] = {1}[59:56]);\n".format(x_in, p)
 
         command += "ASSERT({0}[7:4] = BVXOR({1}[7:4],{2}[3:0]));\n".format(p, x_in, s)
-        command += "ASSERT({0}[15:12] = BVXOR({1}[15:12],{2}[11:8]));\n".format(p, x_in, s)
-        command += "ASSERT({0}[23:20] = BVXOR({1}[23:20],{2}[19:16]));\n".format(p, x_in, s)
-        command += "ASSERT({0}[31:28] = BVXOR({1}[31:28],{2}[27:24]));\n".format(p, x_in, s)
-        command += "ASSERT({0}[39:36] = BVXOR({1}[39:36],{2}[35:32]));\n".format(p, x_in, s)
-        command += "ASSERT({0}[47:44] = BVXOR({1}[47:44],{2}[43:40]));\n".format(p, x_in, s)
-        command += "ASSERT({0}[55:52] = BVXOR({1}[55:52],{2}[51:48]));\n".format(p, x_in, s)
-        command += "ASSERT({0}[63:60] = BVXOR({1}[63:60],{2}[59:56]));\n".format(p, x_in, s)
+        command += "ASSERT({0}[15:12] = BVXOR({1}[15:12],{2}[7:4]));\n".format(p, x_in, s)
+        command += "ASSERT({0}[23:20] = BVXOR({1}[23:20],{2}[11:8]));\n".format(p, x_in, s)
+        command += "ASSERT({0}[31:28] = BVXOR({1}[31:28],{2}[15:12]));\n".format(p, x_in, s)
+        command += "ASSERT({0}[39:36] = BVXOR({1}[39:36],{2}[19:16]));\n".format(p, x_in, s)
+        command += "ASSERT({0}[47:44] = BVXOR({1}[47:44],{2}[23:20]));\n".format(p, x_in, s)
+        command += "ASSERT({0}[55:52] = BVXOR({1}[55:52],{2}[27:24]));\n".format(p, x_in, s)
+        command += "ASSERT({0}[63:60] = BVXOR({1}[63:60],{2}[31:28]));\n".format(p, x_in, s)
 
 
         #Permutation Layer

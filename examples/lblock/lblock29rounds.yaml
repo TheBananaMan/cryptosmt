@@ -1,0 +1,13 @@
+# Example input file for LBLOCK64 - 29 rounds to find all characteristics 
+---
+cipher: lblock
+sweight: TODO
+rounds: 29
+wordsize: 32
+mode: 4
+fixedVariables:
+- X0: "TODO"
+- Y0: "TODO"
+- X29: "TODO"
+- Y29: "TODO"
+...

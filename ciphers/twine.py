@@ -46,7 +46,7 @@ class TwineCipher(AbstractCipher):
             w = ["w{}".format(i) for i in range(rounds)]
 
             stpcommands.setupVariables(stp_file, x, wordsize)
-            stpcommands.setupVariables(stp_file, s, wordsize // 2)
+            stpcommands.setupVariables(stp_file, s, wordsize)
             stpcommands.setupVariables(stp_file, p, wordsize)
             stpcommands.setupVariables(stp_file, w, wordsize)
 
@@ -87,10 +87,10 @@ class TwineCipher(AbstractCipher):
                          "{0}[{1}:{1}]".format(x_in, 8*i + 2),
                          "{0}[{1}:{1}]".format(x_in, 8*i + 1),
                          "{0}[{1}:{1}]".format(x_in, 8*i + 0),
-                         "{0}[{1}:{1}]".format(s, 4*i + 3),
-                         "{0}[{1}:{1}]".format(s, 4*i + 2),
-                         "{0}[{1}:{1}]".format(s, 4*i + 1),
-                         "{0}[{1}:{1}]".format(s, 4*i + 0),
+                         "{0}[{1}:{1}]".format(s, 8*i + 3),
+                         "{0}[{1}:{1}]".format(s, 8*i + 2),
+                         "{0}[{1}:{1}]".format(s, 8*i + 1),
+                         "{0}[{1}:{1}]".format(s, 8*i + 0),
                          "{0}[{1}:{1}]".format(w, 8*i + 3),
                          "{0}[{1}:{1}]".format(w, 8*i + 2),
                          "{0}[{1}:{1}]".format(w, 8*i + 1),
@@ -116,6 +116,7 @@ class TwineCipher(AbstractCipher):
         command += "ASSERT({0}[55:52] = BVXOR({1}[55:52],{2}[27:24]));\n".format(p, x_in, s)
         command += "ASSERT({0}[63:60] = BVXOR({1}[63:60],{2}[31:28]));\n".format(p, x_in, s)
 
+        command += "ASSERT(0x00000000 = {0}[63:32]);\n".format(s)
 
         #Permutation Layer
         # pi = [5, 0, 1, 4, 7, 0xC, 3, 8, 0xD, 6, 9, 2, 0xF, 0xA, 0xB, 0xE]

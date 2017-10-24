@@ -1,4 +1,4 @@
-# Example input file for TWINE64 - 13 rounds to find all characteristics 
+# Example input file for twine - 13 rounds to find all characteristics
 ---
 cipher: twine
 sweight: 58
@@ -6,6 +6,5 @@ rounds: 13
 wordsize: 64
 mode: 4
 fixedVariables:
-- X0: "0x0000A0009700A0C7"
-- X13: "0x000A0A0C00707009"
-...
+- X0: "0xB01D00B000FD0000"
+- X13: "0xD0010F0BD000000B"

@@ -1,4 +1,4 @@
-# Example input file for TWINE64 - 9 rounds to find all characteristics 
+# Example input file for twine - 9 rounds to find all characteristics
 ---
 cipher: twine
 sweight: 28
@@ -6,6 +6,5 @@ rounds: 9
 wordsize: 64
 mode: 4
 fixedVariables:
-- X0: "0x50A2A2000000A097"
-- X9: "0x250A0A2000700A09"
-...
+- X0: "0x5600F05056A20000"
+- X9: "0x050A600520006F05"

@@ -6,5 +6,5 @@ rounds: 26
 wordsize: 64
 mode: 4
 fixedVariables:
-- X0: "0x00900090000000A0"
-- X26: "0x000000970090A808"
+- X0: "TODO"
+- X26: "TODO"

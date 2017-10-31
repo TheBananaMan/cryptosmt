@@ -6,5 +6,5 @@ rounds: 9
 wordsize: 64
 mode: 4
 fixedVariables:
-- X0: "0x5600F05056A20000"
-- X9: "0x050A600520006F05"
+- X0: "0xC04E4E00000040DB"
+- X9: "0xEC0404E000B0040D"

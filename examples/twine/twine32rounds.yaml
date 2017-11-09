@@ -6,5 +6,5 @@ rounds: 32
 wordsize: 64
 mode: 4
 fixedVariables:
-- X0: "0x00EC00007AEC0000"
-- X32: "0x700C090A7000000A"
+- X0: "0xEC0000EC00007A00"
+- X32: "0x000A0A0C00707009"

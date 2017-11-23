@@ -97,7 +97,7 @@ class MidoriCipher(AbstractCipher):
 
         for idx, val in enumerate(permutation):
             command += "ASSERT({0}[{1}:{2}] = {3}[{4}:{5}]);\n".format(
-                sc, 4*idx + 3, 4*idx, mc, 4*val + 3, 4*val)
+                sc, 4*val + 3, 4*val, mc, 4*idx + 3, 4*idx)
 
         #MixColumns
         # 0 1 1 1       x0      x1 + x2 + x3

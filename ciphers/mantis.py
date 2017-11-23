@@ -142,7 +142,7 @@ class MantisCipher(AbstractCipher):
             xorsum = stpcommands.getStringXORn(mc[4*col:(4*(col + 1))])  # Get One column
             for row in range(4):
                 command += "ASSERT({} = BVXOR({}, {}));\n".format(sb_out[4*col + row],
-                                                                  sr[4*col + row],
+                                                                  mc[4*col + row],
                                                                   xorsum)
 
         stp_file.write(command)

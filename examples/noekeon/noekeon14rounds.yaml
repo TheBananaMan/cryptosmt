@@ -6,12 +6,12 @@ rounds: 14
 wordsize: 32
 mode: 4
 fixedVariables:
-- A00: "0x0000000B"
-- A10: "0x8D800D8D"
-- A20: "0x80000006"
-- A30: "0x8D800D8D"
-- A014: "0x00000008"
-- A114: "0x00000000"
-- A214: "0x00000004"
-- A314: "0x00000000"
+- A00: "todo"
+- A10: "todo"
+- A20: "todo"
+- A30: "todo"
+- A014: "todo"
+- A114: "todo"
+- A214: "todo"
+- A314: "todo"
 ...

@@ -6,12 +6,12 @@ rounds: 5
 wordsize: 32
 mode: 4
 fixedVariables:
-- A00: "0x007C7C7C"
-- A10: "0x00004000"
-- A20: "0x007C7C7C"
-- A30: "0x00003C00"
-- A05: "0x00000000"
-- A15: "0x00004000"
-- A25: "0x00000000"
-- A35: "0x00001000"
+- A00: "todo"
+- A10: "todo"
+- A20: "todo"
+- A30: "todo"
+- A05: "todo"
+- A15: "todo"
+- A25: "todo"
+- A35: "todo"
 ...

@@ -38,13 +38,20 @@ class DifferentialCharacteristic(object):
             for word in self.print_format:
                 try:
                     # Add word to table
-                    if word == 'w':# or word == 'wr' or word == 'wl' or word == 'wx0' or word == 'wx1' or word == 'wx2' or word == 'wx3':
+                    if word == 'w' or word == 'wr' or word == 'wl' or word == 'wx0' or word == 'wx1' or word == 'wx2' or word == 'wx3':
                         weight = self.characteristic_data[word+str(rnd)]
                         # Print hw(weight) or weight depending on the cipher
                         if self.cipher.name == "keccakdiff" or \
                            self.cipher.name == "ketje" or \
                            self.cipher.name == "ascon":
                             tmp_row.append("-" + str(int(weight, 16)))
+                        elif self.cipher.name == "sparxround" or \
+                           self.cipher.name == "cham" or \
+                           self.cipher.name == "speck":
+                            #ignore MSB for weight computation
+                            print(weight)
+                            formatstring = "0" + str((len(weight)-2)*4) + "b"
+                            tmp_row.append("-" + str(format(int(weight,16), formatstring)[1:].count('1')))
                         else:
                             tmp_row.append("-" + str(bin(int(weight, 16)).count('1')))
                     else:

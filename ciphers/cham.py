@@ -23,7 +23,7 @@ class CHAMCipher(AbstractCipher):
         """
         Returns the print format.
         """
-        return ['X0', 'X1', 'X2', 'X3', 'w0']
+        return ['X0', 'X1', 'X2', 'X3', 'w']
 
     def createSTP(self, stp_filename, parameters):
         """
@@ -45,7 +45,7 @@ class CHAMCipher(AbstractCipher):
             x2 = ["X2{}".format(i) for i in range(rounds + 1)]
             x3 = ["X3{}".format(i) for i in range(rounds + 1)]
             x0x1 = ["X0X1{}".format(i) for i in range(rounds + 1)]
-            w = ["w0{}".format(i) for i in range(rounds)]
+            w = ["w{}".format(i) for i in range(rounds)]
 
             stpcommands.setupVariables(stp_file, x0, wordsize)
             stpcommands.setupVariables(stp_file, x1, wordsize)

@@ -74,6 +74,9 @@ class SPARXRoundCipher(AbstractCipher):
             stpcommands.setupWeightComputation(stp_file, weight, wleft + wright, wordsize, 1)
 
             for i in range(rounds):
+                if parameters["skipround"] == (i+1):
+                    continue
+
                 if ((i+1) % self.rounds_per_step) == 0:
                     #do round function left (SPECKEY)
                     self.setupSPECKEYRound(stp_file, x0[i], x1[i],

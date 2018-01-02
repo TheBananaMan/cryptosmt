@@ -133,6 +133,60 @@ def findBestConstants(cipher, parameters):
     print(constantMinWeights)
     return constantMinWeights
 
+def findBestConstantsChaskey(cipher, parameters):
+    """
+    find the best constants for chaskey (works for various word sizes)
+    """
+    weight = parameters["sweight"]
+    wordsize = parameters["wordsize"]
+    rounds = parameters["rounds"]
+    bestConstants = []
+
+    for rotv0up in range(0, wordsize):
+        for rotv1up in range(0, wordsize):
+            for rotv3up in range(0, wordsize):
+                weight = 0
+
+                #filter cases where all constants are the same
+                if rotv0up == rotv1up and rotv1up == rotv3up:
+                    continue
+
+                rotv0down = rotv0up
+                rotv1down = rotv1up
+                rotv3down = rotv3up
+
+                #for a given number of rounds - search the best weight
+                parameters["rotationconstants"] = [rotv0up, rotv0down, rotv1up, rotv1down, rotv3up, rotv3down]
+
+                #disable printing
+                sys.stdout = open(os.devnull, "w")
+                weight = findMinWeightCharacteristic(cipher, parameters)
+                sys.stdout = sys.__stdout__
+
+                added = 0
+                for subset in bestConstants:
+                    if subset[0] == weight:
+                        subset.append([rotv0up, rotv0down, rotv1up, rotv1down, rotv3up, rotv3down])
+                        added = 1
+                        break
+                if added == 0:  # weight doesnt exist yet, create new entry
+                    bestConstants.append([weight, [rotv0up, rotv0down, rotv1up, rotv1down, rotv3up, rotv3down]])
+
+    #print best constants
+    print("Best Constants for {}\n".format(cipher.name))
+    sys.stdout.flush()
+    for subset in bestConstants:
+        print("Weight: {}".format(subset[0]))
+        sys.stdout.flush()
+        for parameters in subset[1:]:
+            print(parameters)
+            sys.stdout.flush()
+        print("\n")
+        sys.stdout.flush()
+
+    return
+
+
 def findMinWeightCharacteristic(cipher, parameters):
     """
     Find a characteristic of minimal weight for the cipher
@@ -289,7 +343,10 @@ def searchCharacteristics(cipher, parameters):
         parameters["sweight"] = findMinWeightCharacteristic(cipher, parameters)
         print("Rounds:")
         sys.stdout.flush()
-        if cipher.name == "prince" or cipher.name == "mantis" or cipher.name == "qarma":
+        if cipher.name == "prince" or cipher.name == "mantis" or \
+           cipher.name == "qarma" or cipher.name == "broccoli" or  \
+           cipher.name == "broccoli3" or cipher.name == "broccoli4" or \
+           cipher.name == "broccoli5":
             parameters["rounds"] = parameters["rounds"] + 2
         else:
             parameters["rounds"] = parameters["rounds"] + 1

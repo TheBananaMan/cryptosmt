@@ -10,7 +10,8 @@ from ciphers import (simon, speck, simonlinear, keccak, keccakdiff,
                      ketje, ascon, salsa, chacha, skinny, present,
                      midori, lblock, sparx, sparxround, fly, fly4bit,
                      twine, noekeon, prince, mantis, sparxround128,
-                     speckey, gift)
+                     speckey, gift, rectangle, skinnyrk, skinny128,
+                     midori128, cham)
 
 from config import PATH_STP, PATH_CRYPTOMINISAT, PATH_BOOLECTOR
 
@@ -53,7 +54,12 @@ def startsearch(tool_parameters):
                     "prince" : prince.PrinceCipher(),
                     "mantis" : mantis.MantisCipher(),
                     "speckey" : speckey.SpeckeyCipher(),
-                    "gift" : gift.GiftCipher()}
+                    "gift" : gift.GiftCipher(),
+                    "rectangle" : rectangle.RectangleCipher(),
+                    "skinnyrk" : skinnyrk.SkinnyRKCipher(),
+                    "skinny128" : skinny128.Skinny128Cipher(),
+                    "midori128" : midori128.Midori128Cipher(),
+                    "cham" : cham.CHAMCipher()}
     cipher = None
 
     if tool_parameters["cipher"] in cipher_suite:
@@ -76,6 +82,8 @@ def startsearch(tool_parameters):
         search.computeProbabilityOfDifferentials(cipher, tool_parameters)
     elif tool_parameters["mode"] == 5:
         search.findOptimalTrailsMatsui(cipher, tool_parameters)
+    elif tool_parameters["mode"] == 6:                                  #mode 6 works just for chaskey
+        search.findBestConstantsChaskey(cipher, tool_parameters)
 
     return
 
@@ -126,7 +134,10 @@ def loadparameters(args):
               "fixedVariables" : {},
               "blockedCharacteristics" : [],
               "rate" : 160,
-              "capacity" : 240}
+              "capacity" : 240,
+              "keysize" : 64,
+              "tweaksize" : 64,
+              "skipround" : -1}
 
     # Check if there is an input file specified
     if args.inputfile:
@@ -186,6 +197,15 @@ def loadparameters(args):
     if args.capacity:
         params["capacity"] = int(args.capacity[0])
 
+    if args.keysize:
+        params["keysize"] = int(args.keysize[0])
+
+    if args.tweaksize:
+        params["tweaksize"] = int(args.tweaksize[0])
+
+    if args.skipround:
+        params["skipround"] = int(args.skipround[0])
+
     return params
 
 
@@ -213,14 +233,15 @@ def main():
     parser.add_argument('--nummessages', nargs=1, type=int,
                         help="Number of message blocks.")
     parser.add_argument('--mode', nargs=1, type=int,
-                        choices=[0, 1, 2, 3, 4, 5], help=
+                        choices=[0, 1, 2, 3, 4, 5, 6], help=
                         "0 = search characteristic for fixed round\n"
                         "1 = search characteristic for all rounds starting at"
                         "the round specified\n"
                         "2 = search all characteristic for a specific weight\n"
                         "3 = used for key recovery\n"
                         "4 = determine the probability of the differential\n"
-                        "5 = calculate best differential probability using matsui's algorithm\n")
+                        "5 = calculate best differential probability using matsui's algorithm\n"
+                        "6 = search best constants for chaskey\n")
     parser.add_argument('--timelimit', nargs=1, type=int,
                         help="Set a timelimit for the search in seconds.")
     parser.add_argument('--iterative', action="store_true",
@@ -233,6 +254,9 @@ def main():
     parser.add_argument('--latex', nargs=1, help="Print the trail in .tex format.")
     parser.add_argument('--rate', nargs=1, help="For Keccak only. Set the rate.")
     parser.add_argument('--capacity', nargs=1, help="For Keccak only. Set the capacity.")
+    parser.add_argument('--keysize', nargs=1, help="Key size used for the cipher")
+    parser.add_argument('--tweaksize', nargs=1, help="Tweak size used for the cipher")
+    parser.add_argument('--skipround', nargs=1, help="Define some rounds to skip")
 
     # Parse command line arguments and construct parameter list.
     args = parser.parse_args()

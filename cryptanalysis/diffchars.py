@@ -49,7 +49,7 @@ class DifferentialCharacteristic(object):
                            self.cipher.name == "cham" or \
                            self.cipher.name == "speck":
                             #ignore MSB for weight computation
-                            print(weight)
+                            #print(weight)
                             formatstring = "0" + str((len(weight)-2)*4) + "b"
                             tmp_row.append("-" + str(format(int(weight,16), formatstring)[1:].count('1')))
                         else:

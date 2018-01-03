@@ -98,9 +98,12 @@ class SPARXRoundCipher(AbstractCipher):
                     self.setupSPECKEYRound(stp_file, x0[i], x1[i], x0[i+1], x1[i+1],
                                            wleft[i], wordsize)
 
-                    #do round function right (SPECKEY)
-                    self.setupSPECKEYRound(stp_file, y0[i], y1[i], y0[i+1], y1[i+1],
-                                           wright[i], wordsize)
+                    if (parameters["skipround"]+1) == (i+1):
+                        continue
+                    else :
+                        #do round function right (SPECKEY)
+                        self.setupSPECKEYRound(stp_file, y0[i], y1[i], y0[i+1], y1[i+1],
+                                               wright[i], wordsize)
 
             # No all zero characteristic
             stpcommands.assertNonZero(stp_file, x0+x1+y0+y1, wordsize)

@@ -137,7 +137,7 @@ def loadparameters(args):
               "capacity" : 240,
               "keysize" : 64,
               "tweaksize" : 64,
-              "skipround" : -1}
+              "skipround" : -10}
 
     # Check if there is an input file specified
     if args.inputfile:

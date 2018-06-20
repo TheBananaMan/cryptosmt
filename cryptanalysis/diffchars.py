@@ -47,7 +47,11 @@ class DifferentialCharacteristic(object):
                             tmp_row.append("-" + str(int(weight, 16)))
                         elif self.cipher.name == "sparxround" or \
                            self.cipher.name == "cham" or \
-                           self.cipher.name == "speck":
+                           self.cipher.name == "speck" or \
+                           self.cipher.name == "sparxround1r" or \
+                           self.cipher.name == "sparxround2r" or \
+                           self.cipher.name == "sparxround4r" or \
+                           self.cipher.name == "sparxround5r":
                             #ignore MSB for weight computation
                             #print(weight)
                             formatstring = "0" + str((len(weight)-2)*4) + "b"

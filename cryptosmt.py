@@ -11,7 +11,9 @@ from ciphers import (simon, speck, simonlinear, keccak, keccakdiff,
                      midori, lblock, sparx, sparxround, fly, fly4bit,
                      twine, noekeon, prince, mantis, sparxround128,
                      speckey, gift, rectangle, skinnyrk, skinny128,
-                     midori128, cham)
+                     midori128, cham, sparxround1r, sparxround2r,
+                     sparxround3r, sparxround4r, sparxround5r,
+                     sparxround6r)
 
 from config import PATH_STP, PATH_CRYPTOMINISAT, PATH_BOOLECTOR
 
@@ -59,7 +61,14 @@ def startsearch(tool_parameters):
                     "skinnyrk" : skinnyrk.SkinnyRKCipher(),
                     "skinny128" : skinny128.Skinny128Cipher(),
                     "midori128" : midori128.Midori128Cipher(),
-                    "cham" : cham.CHAMCipher()}
+                    "cham" : cham.CHAMCipher(),
+                    "sparxround1r" : sparxround1r.SPARXRound1RCipher(),
+                    "sparxround2r" : sparxround2r.SPARXRound2RCipher(),
+                    "sparxround3r" : sparxround3r.SPARXRound3RCipher(),
+                    "sparxround4r" : sparxround4r.SPARXRound4RCipher(),
+                    "sparxround5r" : sparxround5r.SPARXRound5RCipher(),
+                    "sparxround6r" : sparxround6r.SPARXRound6RCipher()
+                    }
     cipher = None
 
     if tool_parameters["cipher"] in cipher_suite:

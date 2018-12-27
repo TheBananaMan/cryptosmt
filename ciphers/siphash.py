@@ -115,24 +115,24 @@ class SipHashCipher(AbstractCipher):
             #                v2[rounds], v3[rounds], wordsize))
 
             ## Uncomment to search for message collision
-            stpcommands.assertNonZero(stp_file, m, wordsize)
-            zero_string = "0hex" + "0"*(wordsize / 4)
-            stpcommands.assertVariableValue(stp_file, v0[0], zero_string)
-            stpcommands.assertVariableValue(stp_file, v1[0], zero_string)
-            stpcommands.assertVariableValue(stp_file, v2[0], zero_string)
-            stpcommands.assertVariableValue(stp_file, v3[0], zero_string)
-            stp_file.write(self.getStringForCollision(v0[rounds*self.num_messages],
-                                                      v1[rounds*self.num_messages],
-                                                      v2[rounds*self.num_messages],
-                                                      v3[rounds*self.num_messages],
-                                                      wordsize))
+            #stpcommands.assertNonZero(stp_file, m, wordsize)
+            #zero_string = "0hex" + "0"*(wordsize / 4)
+            #stpcommands.assertVariableValue(stp_file, v0[0], zero_string)
+            #stpcommands.assertVariableValue(stp_file, v1[0], zero_string)
+            #stpcommands.assertVariableValue(stp_file, v2[0], zero_string)
+            #stpcommands.assertVariableValue(stp_file, v3[0], zero_string)
+            #stp_file.write(self.getStringForCollision(v0[rounds*self.num_messages],
+            #                                          v1[rounds*self.num_messages],
+            #                                          v2[rounds*self.num_messages],
+            #                                          v3[rounds*self.num_messages],
+            #                                          wordsize))
 
             ## Uncomment to search for characteristic / distinguisher
-            # for i in m:
-            #     zero_string = "0hex" + "0"*(wordsize / 4)
-            #     stpcommands.assertVariableValue(stp_file, i, zero_string)
+            for i in m:
+                zero_string = "0hex" + "0"*(wordsize // 4)
+                stpcommands.assertVariableValue(stp_file, i, zero_string)
 
-            # stpcommands.assertNonZero(stp_file, v0 + v1 + v2 + v3, wordsize)
+            stpcommands.assertNonZero(stp_file, v0 + v1 + v2 + v3, wordsize)
 
             for key, value in parameters["fixedVariables"].items():
                 stpcommands.assertVariableValue(stp_file, key, value)

@@ -7,7 +7,7 @@ Created on Mar 28, 2014
 from cryptanalysis import search
 from ciphers import (simon, speck, simonlinear, keccak, keccakdiff,
                      siphash, simonrk, chaskeymachalf, simonkeyrc,
-                     ketje, ascon, salsa, chacha, skinny, present,
+                     ketje, ascon, salsa, chacha, skinny, gimli, present,
                      midori, lblock, sparx, sparxround, fly, fly4bit,
                      twine, noekeon, prince, mantis, sparxround128,
                      speckey, gift, rectangle, skinnyrk, skinny128,
@@ -43,6 +43,7 @@ def startsearch(tool_parameters):
                     "salsa" : salsa.SalsaCipher(),
                     "chacha" : chacha.ChaChaCipher(),
                     "skinny" : skinny.SkinnyCipher(),
+					"gimli" : gimli.GimliCipher(),
                     "present" : present.PresentCipher(),
                     "midori" : midori.MidoriCipher(),
                     "lblock" : lblock.LBlockCipher(),
@@ -69,6 +70,7 @@ def startsearch(tool_parameters):
                     "sparxround5r" : sparxround5r.SPARXRound5RCipher(),
                     "sparxround6r" : sparxround6r.SPARXRound6RCipher()
                     }
+
     cipher = None
 
     if tool_parameters["cipher"] in cipher_suite:

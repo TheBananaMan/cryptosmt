@@ -22,6 +22,12 @@ class ChasKeyMacHalf(AbstractCipher):
 
     name = "chaskeyhalf"
     num_messages = 1
+    rot_v0_up = 5#16
+    rot_v0_down = 5#16
+    rot_v1_up = 15#5
+    rot_v1_down = 15#7
+    rot_v3_up = 8#8
+    rot_v3_down = 8#13
 
     def getFormatString(self):
         """
@@ -39,6 +45,16 @@ class ChasKeyMacHalf(AbstractCipher):
         weight = parameters["sweight"]
 
         self.num_messages = parameters["nummessages"]
+
+        # Replace with custom if set in parameters.
+        if "rotationconstants" in parameters:
+            self.rot_v0_up = parameters["rotationconstants"][0]
+            self.rot_v0_down = parameters["rotationconstants"][1]
+            self.rot_v1_up = parameters["rotationconstants"][2]
+            self.rot_v1_down = parameters["rotationconstants"][3]
+            self.rot_v3_up = parameters["rotationconstants"][4]
+            self.rot_v3_down = parameters["rotationconstants"][5]
+
 
         with open(stp_filename, 'w') as stp_file:
             stp_file.write("% Input File for STP\n% ChasKeyMac w={} rounds={}"
@@ -105,11 +121,13 @@ class ChasKeyMacHalf(AbstractCipher):
         command = ""
 
         if (rnd % 2) == 0:
-            rot_one = 5
-            rot_two = 8
+            rot_one = self.rot_v1_up
+            rot_two = self.rot_v3_up
+            rot_three = self.rot_v0_up
         else:
-            rot_one = 7
-            rot_two = 13
+            rot_one = self.rot_v1_down
+            rot_two = self.rot_v3_down
+            rot_three = self.rot_v0_down
 
         #Assert intermediate values
         #Rotate right to get correct output value
@@ -121,12 +139,12 @@ class ChasKeyMacHalf(AbstractCipher):
 
         #v1_out
         command += "ASSERT({} = BVXOR({}, {}));\n".format(
-            v1_out, rotl(v1_in, rot_one, wordsize), rotr(v2_out, 16, wordsize))
+            v1_out, rotl(v1_in, rot_one, wordsize), rotr(v2_out, rot_three, wordsize))
 
         #v2_out
         command += "ASSERT("
         command += stpcommands.getStringAdd(
-            v1_in, v0_in, rotr(v2_out, 16, wordsize), wordsize)
+            v1_in, v0_in, rotr(v2_out, rot_three, wordsize), wordsize)
         command += ");\n"
 
         #v3_out
@@ -138,7 +156,7 @@ class ChasKeyMacHalf(AbstractCipher):
 
         command += "ASSERT({0} = ~".format(w0)
         command += stpcommands.getStringEq(
-            v1_in, v0_in, rotr(v2_out, 16, wordsize))
+            v1_in, v0_in, rotr(v2_out, rot_three, wordsize))
         command += ");\n"
 
         command += "ASSERT({0} = ~".format(w1)

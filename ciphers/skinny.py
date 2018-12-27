@@ -15,7 +15,6 @@ class SkinnyCipher(AbstractCipher):
     """
 
     name = "skinny"
-    sbox = [0xc, 6, 9, 0, 1, 0xa, 2, 0xb, 3, 8, 5, 0xd, 4, 0xe, 7, 0xf]
 
     def getFormatString(self):
         """
@@ -25,7 +24,7 @@ class SkinnyCipher(AbstractCipher):
 
     def createSTP(self, stp_filename, parameters):
         """
-        Creates an STP file to find a characteristic for SIMON with
+        Creates an STP file to find a differnetial trail for Skinny with
         the given parameters.
         """
 
@@ -85,42 +84,10 @@ class SkinnyCipher(AbstractCipher):
         Model for differential behaviour of one round Skinny
         """
         command = ""
-        #Add S-box transitions
-        #for i in range(16):
-        #    command += self.addSbox(sc_in, sr, 4*i)
+        # SubBytes
+        skinny_sbox = [0xc, 0x6, 0x9, 0x0, 0x1, 0xa, 0x2, 0xb, 
+                       0x3, 0x8, 0x5, 0xd, 0x4, 0xe, 0x7, 0xf]
 
-        #ShiftRows
-        command += "ASSERT({0}[15:0] = {1}[15:0]);\n".format(sr, mc)
-
-        command += "ASSERT({0}[31:20] = {1}[27:16]);\n".format(sr, mc)
-        command += "ASSERT({0}[19:16] = {1}[31:28]);\n".format(sr, mc)
-
-        command += "ASSERT({0}[39:32] = {1}[47:40]);\n".format(sr, mc)
-        command += "ASSERT({0}[47:40] = {1}[39:32]);\n".format(sr, mc)
-
-        command += "ASSERT({0}[63:60] = {1}[51:48]);\n".format(sr, mc)
-        command += "ASSERT({0}[59:48] = {1}[63:52]);\n".format(sr, mc)
-
-        #MixColumns
-        command += "ASSERT("
-        command += "{0}[15:0] = {1}[31:16]".format(mc, sc_out);
-        command += ");\n"
-
-        command += "ASSERT("
-        command += "BVXOR({0}[31:16], {0}[47:32]) = {1}[47:32]".format(mc, sc_out);
-        command += ");\n"
-
-        command += "ASSERT("
-        command += "BVXOR({0}[47:32], {0}[15:0]) = {1}[63:48]".format(mc, sc_out);
-        command += ");\n"
-
-        command += "ASSERT("
-        command += "BVXOR({0}[63:48], {1}[63:48]) = {1}[15:0]".format(mc, sc_out);
-        command += ");\n"
-
-        # TODO: correctly compute weight
-        # For now just take the Hamming weight
-        skinny_sbox = [0xc, 6, 9, 0, 1, 0xa, 2, 0xb, 3, 8, 5, 0xd, 4, 0xe, 7, 0xf]
         for i in range(16):
             variables = ["{0}[{1}:{1}]".format(sc_in, 4*i + 3),
                          "{0}[{1}:{1}]".format(sc_in, 4*i + 2),
@@ -136,6 +103,35 @@ class SkinnyCipher(AbstractCipher):
                          "{0}[{1}:{1}]".format(w, 4*i + 0)]
             command += stpcommands.add4bitSbox(skinny_sbox, variables)
 
+        # ShiftRows
+        command += "ASSERT({0}[15:0] = {1}[15:0]);\n".format(sr, mc)
+
+        command += "ASSERT({0}[31:20] = {1}[27:16]);\n".format(sr, mc)
+        command += "ASSERT({0}[19:16] = {1}[31:28]);\n".format(sr, mc)
+
+        command += "ASSERT({0}[39:32] = {1}[47:40]);\n".format(sr, mc)
+        command += "ASSERT({0}[47:40] = {1}[39:32]);\n".format(sr, mc)
+
+        command += "ASSERT({0}[63:60] = {1}[51:48]);\n".format(sr, mc)
+        command += "ASSERT({0}[59:48] = {1}[63:52]);\n".format(sr, mc)
+
+
+        # MixColumns
+        command += "ASSERT("
+        command += "{0}[15:0] = {1}[31:16]".format(mc, sc_out);
+        command += ");\n"
+
+        command += "ASSERT("
+        command += "BVXOR({0}[31:16], {0}[47:32]) = {1}[47:32]".format(mc, sc_out);
+        command += ");\n"
+
+        command += "ASSERT("
+        command += "BVXOR({0}[47:32], {0}[15:0]) = {1}[63:48]".format(mc, sc_out);
+        command += ");\n"
+
+        command += "ASSERT("
+        command += "BVXOR({0}[63:48], {1}[63:48]) = {1}[15:0]".format(mc, sc_out);
+        command += ");\n"
 
         stp_file.write(command)
         return

@@ -1,3 +1,11 @@
 *__pycache__
 *.pyc
 tmp*
+
+#ignore some ciphers
+ciphers/chaskeymachalf.py
+ciphers/chaskeymachalf_64bit.py
+
+#ignore some trails 
+examples/sparxround128*
+examples/speck/*
